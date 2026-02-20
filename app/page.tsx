@@ -42,13 +42,9 @@ export default function CaviliaApp() {
 
   return (
     <main className="relative mx-auto min-h-screen max-w-md">
-      {/* Leather background */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/leather-bg.jpg')" }}
-        aria-hidden="true"
-      />
-      <div className="pointer-events-none fixed inset-0 z-0 bg-background/70" aria-hidden="true" />
+      {/* Fundo couro premium em CSS */}
+      <div className="leather-premium-bg" aria-hidden="true" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-background/5" aria-hidden="true" />
       <div className="relative z-10">
       {activeScreen === "home" && (
         <HomeScreen onNavigate={handleNavigate} />
