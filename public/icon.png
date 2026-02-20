@@ -1,0 +1,265 @@
+"use client";
+
+import { useState } from "react";
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState("inicio");
+  const [pressedBtn, setPressedBtn] = useState<string | null>(null);
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0d0603; min-height: 100vh; }
+
+        .leather-page {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Cinzel', serif;
+        }
+
+        .leather-bg {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background-color: #1c0e06;
+          background-image:
+            radial-gradient(ellipse 80% 35% at 50% -5%, rgba(100,55,20,0.55) 0%, transparent 70%),
+            radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.65) 100%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E"),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='3' seed='12' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23p)' opacity='0.055'/%3E%3C/svg%3E"),
+            linear-gradient(160deg, #2a1308 0%, #180c04 35%, #0e0703 65%, #1a0e06 100%);
+        }
+
+        .leather-stitch {
+          position: absolute;
+          inset: 12px;
+          z-index: 1;
+          border: 1.5px dashed rgba(180,120,40,0.18);
+          border-radius: 4px;
+          pointer-events: none;
+        }
+        .leather-stitch::before {
+          content: '';
+          position: absolute;
+          inset: 4px;
+          border: 1px solid rgba(200,151,45,0.06);
+          border-radius: 2px;
+        }
+
+        .content {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding-top: clamp(50px, 12vw, 80px);
+          padding-bottom: 20px;
+          flex: 1;
+        }
+
+        .brand-title {
+          font-size: clamp(30px, 9vw, 46px);
+          font-weight: 900;
+          letter-spacing: 0.22em;
+          background: linear-gradient(180deg, #f5d060 0%, #d4962a 25%, #f0c040 50%, #a8700f 72%, #d4962a 88%, #f5d060 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+          margin-bottom: 6px;
+        }
+
+        .brand-sub {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: clamp(28px, 7vw, 44px);
+        }
+        .brand-sub-line { height: 1px; width: 44px; background: linear-gradient(to right, transparent, rgba(200,151,45,0.7)); }
+        .brand-sub-line.right { background: linear-gradient(to left, transparent, rgba(200,151,45,0.7)); }
+        .brand-sub-text { font-size: clamp(8px, 2.2vw, 11px); letter-spacing: 0.32em; color: rgba(200,151,45,0.75); font-weight: 600; }
+
+        .logo-wrap {
+          width: clamp(110px, 30vw, 155px);
+          height: clamp(110px, 30vw, 155px);
+          margin-bottom: clamp(36px, 9vw, 52px);
+          position: relative;
+        }
+        .logo-glow {
+          position: absolute;
+          inset: -20px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse, rgba(200,151,45,0.18) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 6px 24px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(200,151,45,0.25));
+          position: relative;
+          z-index: 1;
+        }
+
+        .btns {
+          width: 100%;
+          max-width: 340px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding: 0 28px;
+        }
+
+        .leather-btn {
+          width: 100%;
+          padding: 17px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-family: 'Cinzel', serif;
+          font-size: clamp(10px, 2.8vw, 12px);
+          font-weight: 700;
+          letter-spacing: 0.22em;
+          color: #d4962a;
+          border: none;
+          outline: none;
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.1s ease, box-shadow 0.1s ease;
+          background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='60'%3E%3Cfilter id='nb'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='60' filter='url(%23nb)' opacity='0.07'/%3E%3C/svg%3E"),
+            linear-gradient(180deg, #2e1709 0%, #1c0d05 40%, #130903 60%, #1c0d05 100%);
+          box-shadow:
+            0 0 0 1px rgba(200,151,45,0.55),
+            0 0 0 2px rgba(200,151,45,0.08),
+            inset 0 1px 0 rgba(245,208,96,0.18),
+            inset 0 -1px 0 rgba(0,0,0,0.4),
+            0 4px 16px rgba(0,0,0,0.55);
+        }
+        .leather-btn::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 45%;
+          background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+          border-radius: 6px 6px 0 0;
+          pointer-events: none;
+        }
+        .leather-btn::after {
+          content: '';
+          position: absolute;
+          inset: 4px;
+          border: 1px dashed rgba(200,151,45,0.12);
+          border-radius: 3px;
+          pointer-events: none;
+        }
+        .leather-btn:hover { transform: translateY(-1px); color: #f5d060; }
+        .leather-btn.pressed { transform: translateY(1px); box-shadow: 0 0 0 1px rgba(200,151,45,0.45), inset 0 2px 6px rgba(0,0,0,0.5); }
+
+        .bottom-nav {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          padding: 14px 0 clamp(16px, 5vw, 28px);
+          background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='80'%3E%3Cfilter id='nn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='80' filter='url(%23nn)' opacity='0.06'/%3E%3C/svg%3E"),
+            linear-gradient(0deg, #0a0502 0%, #160b04 100%);
+          border-top: 1px solid rgba(200,151,45,0.22);
+        }
+        .bottom-nav::before {
+          content: '';
+          position: absolute;
+          top: 4px; left: 16px; right: 16px;
+          height: 1px;
+          border-top: 1px dashed rgba(200,151,45,0.1);
+        }
+
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; padding: 6px 20px; transition: all 0.2s ease; font-family: 'Cinzel', serif; }
+        .nav-btn.active .nav-icon { color: #d4962a; filter: drop-shadow(0 0 6px rgba(200,151,45,0.5)); }
+        .nav-btn.inactive .nav-icon { color: rgba(200,151,45,0.35); }
+        .nav-icon { transition: all 0.2s ease; }
+        .nav-label { font-size: 9px; letter-spacing: 0.05em; }
+        .nav-btn.active .nav-label { color: #d4962a; font-weight: 700; }
+        .nav-btn.inactive .nav-label { color: rgba(200,151,45,0.3); font-weight: 400; }
+        .nav-btn.active::after { content: ''; display: block; width: 20px; height: 2px; background: linear-gradient(90deg, transparent, #d4962a, transparent); border-radius: 1px; margin-top: 2px; box-shadow: 0 0 8px rgba(200,151,45,0.5); }
+        .nav-btn.inactive::after { content: ''; display: block; width: 20px; height: 2px; background: transparent; margin-top: 2px; }
+      `}</style>
+
+      <div className="leather-page">
+        <div className="leather-bg" />
+        <div className="leather-stitch" />
+
+        <div className="content">
+          <h1 className="brand-title">CAVILIA</h1>
+
+          <div className="brand-sub">
+            <div className="brand-sub-line" />
+            <span className="brand-sub-text">STUDIO CLUB 1998</span>
+            <div className="brand-sub-line right" />
+          </div>
+
+          <div className="logo-wrap">
+            <div className="logo-glow" />
+            <img src="/logo.png" alt="Cavilia Logo" className="logo-img" />
+          </div>
+
+          <div className="btns">
+            <button
+              className={`leather-btn${pressedBtn === "agendar" ? " pressed" : ""}`}
+              onMouseDown={() => setPressedBtn("agendar")}
+              onMouseUp={() => setPressedBtn(null)}
+              onMouseLeave={() => setPressedBtn(null)}
+            >
+              AGENDAR HORÁRIO
+            </button>
+            <button
+              className={`leather-btn${pressedBtn === "meus" ? " pressed" : ""}`}
+              onMouseDown={() => setPressedBtn("meus")}
+              onMouseUp={() => setPressedBtn(null)}
+              onMouseLeave={() => setPressedBtn(null)}
+            >
+              MEUS HORÁRIOS
+            </button>
+          </div>
+        </div>
+
+        <nav className="bottom-nav">
+          {[
+            {
+              id: "inicio", label: "Início",
+              icon: <svg className="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            },
+            {
+              id: "agendar", label: "Agendar",
+              icon: <svg className="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            },
+            {
+              id: "perfil", label: "Perfil",
+              icon: <svg className="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={`nav-btn ${activeTab === tab.id ? "active" : "inactive"}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.icon}
+              <span className="nav-label">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+    </>
+  );
+}
