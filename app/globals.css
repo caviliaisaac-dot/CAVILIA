@@ -24,9 +24,9 @@
   --input: #1a1a1a;
   --ring: #c9a96e;
   --radius: 0.5rem;
-  --gold: #c9a96e;
-  --gold-light: #d4b87a;
-  --gold-dark: #a68b52;
+  --gold: #e8b84b;
+  --gold-light: #f5cc6a;
+  --gold-dark: #c49a2e;
   --leather: #2a2420;
   --leather-light: #3d342d;
 }
@@ -63,6 +63,92 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Premium leather background - barbearia de luxo */
+.leather-premium-bg {
+  --leather-base: #2a211c;
+  --leather-mid: #342821;
+  --leather-top: #46342a;
+  --leather-vignette: rgba(0, 0, 0, 0.62);
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: var(--leather-base);
+  background-image:
+    /* Iluminacao suave e curta */
+    linear-gradient(
+      180deg,
+      rgba(255, 234, 205, 0.12) 0%,
+      rgba(255, 234, 205, 0.04) 14%,
+      transparent 32%
+    ),
+    /* Vinco/costura discreta */
+    linear-gradient(
+      180deg,
+      transparent 81.8%,
+      rgba(0, 0, 0, 0.3) 84.2%,
+      rgba(176, 133, 88, 0.2) 84.6%,
+      rgba(0, 0, 0, 0.3) 85%,
+      transparent 87.4%
+    ),
+    /* Sombras nas bordas */
+    radial-gradient(
+      ellipse 97% 90% at 50% 48%,
+      transparent 44%,
+      var(--leather-vignette) 100%
+    ),
+    /* Base couro escuro */
+    linear-gradient(
+      186deg,
+      var(--leather-top) 0%,
+      var(--leather-mid) 32%,
+      #2d231d 58%,
+      var(--leather-base) 79%,
+      #1b1512 100%
+    );
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  pointer-events: none;
+}
+
+/* Grao orgânico do couro (sem imagem externa) */
+.leather-premium-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-radial-gradient(
+      circle at 21% 29%,
+      rgba(255, 255, 255, 0.14) 0 0.9px,
+      rgba(0, 0, 0, 0.14) 0.9px 2.2px,
+      transparent 2.2px 4.8px
+    ),
+    repeating-radial-gradient(
+      circle at 66% 63%,
+      rgba(255, 255, 255, 0.12) 0 0.9px,
+      rgba(0, 0, 0, 0.13) 0.9px 2.1px,
+      transparent 2.1px 4.6px
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.2'/%3E%3C/svg%3E");
+  background-size: 120px 120px, 140px 140px, 120px 120px;
+  background-blend-mode: soft-light, multiply, normal;
+  opacity: 0.56;
+  pointer-events: none;
+}
+
+/* Relevo sutil para sensacao de couro legitimo */
+.leather-premium-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(156deg, rgba(255, 233, 202, 0.08) 0%, transparent 18%),
+    linear-gradient(336deg, rgba(0, 0, 0, 0.26) 0%, transparent 24%);
+  mix-blend-mode: soft-light;
+  opacity: 0.58;
+  pointer-events: none;
 }
 
 @layer base {

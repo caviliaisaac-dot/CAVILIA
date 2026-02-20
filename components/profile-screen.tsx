@@ -26,9 +26,11 @@ export function ProfileScreen({ bookings, onCancelBooking }: ProfileScreenProps)
   return (
     <div className="flex min-h-screen flex-col pb-24">
       {/* Header */}
-      <header className="border-b border-border px-4 pb-6 pt-12 text-center">
-        <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full border border-gold/30 bg-card">
-          <HorseLogo size={48} />
+      <header className="border-b border-border px-4 pb-6 pt-12 flex flex-col items-center text-center">
+        <div className="mb-3 flex-shrink-0" style={{ width: 86, height: 86, padding: 3, borderRadius: '9999px', background: 'conic-gradient(from 0deg, #f5cc6a 0%, #e8b84b 18%, #c49a2e 35%, #fff3b0 50%, #c49a2e 65%, #e8b84b 82%, #f5cc6a 100%)', boxShadow: '0 0 18px 4px rgba(232,184,75,0.45), 0 0 6px 1px rgba(255,243,176,0.3)' }}>
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-black overflow-hidden">
+            <img src="/logo-cavilia.png" alt="Cavilia Logo" className="h-full w-full object-contain" />
+          </div>
         </div>
         <h1 className="font-serif text-xl font-bold text-foreground">
           Meu Perfil
