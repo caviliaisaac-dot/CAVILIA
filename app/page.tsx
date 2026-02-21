@@ -31,7 +31,7 @@ export default function CaviliaApp() {
   }
 
   function handleCancelBooking(index: number) {
-    setBookings((prev) => prev.filter((_, i) => i !== index))
+    setBookings((prev) => prev.map((b, i) => i === index ? { ...b, status: "cancelled" as const } : b))
   }
 
   function handleUpdateBooking(index: number, updated: BookingData) {

@@ -17,6 +17,7 @@ export interface BookingData {
   time: string
   clientName: string
   phone: string
+  status?: "active" | "cancelled" | "rescheduled"
 }
 
 const SERVICES = [
