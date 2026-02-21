@@ -144,7 +144,7 @@ export function AdmScreen({ bookings, services, onUpdateBooking, onCancelBooking
                 <Plus className="h-3 w-3" /> Adicionar
               </button>
             </div>
-            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+            <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
               {services.map((svc, i) => (
                 <div key={svc.id} className="rounded-lg border border-border bg-card overflow-hidden">
                   {editingService === i ? (
