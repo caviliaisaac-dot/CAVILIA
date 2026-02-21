@@ -189,10 +189,10 @@
 }
 
 .emblem-ring:hover {
-  background: conic-gradient(from 0deg, #fff0a0 0%, #ffdf00 18%, #f5cc50 35%, #ffffff 50%, #f5cc50 65%, #ffdf00 82%, #fff0a0 100%);
-  box-shadow: 0 0 30px 8px rgba(255,220,0,0.8), 0 0 12px 3px rgba(255,243,100,0.7), 0 0 50px 10px rgba(212,160,23,0.4);
-  filter: brightness(1.2);
-  transform: scale(1.05);
+  background: conic-gradient(from 0deg, #fff0a0 0%, #f5cc50 18%, #d4a017 35%, #fff3b0 50%, #d4a017 65%, #f5cc50 82%, #fff0a0 100%);
+  box-shadow: 0 0 20px 5px rgba(255,220,0,0.5), 0 0 8px 2px rgba(255,243,100,0.4);
+  filter: brightness(1.08);
+  transform: scale(1.03);
 }
 
 /* Título CAVILIA com hover vibrante */
