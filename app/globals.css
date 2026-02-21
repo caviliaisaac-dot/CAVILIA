@@ -171,6 +171,16 @@
   100% { transform: rotateY(720deg); }
 }
 
+@keyframes coin-flip-back-to-front {
+  0%   { transform: rotateY(180deg); }
+  100% { transform: rotateY(900deg); }
+}
+
+@keyframes coin-flip-spin-return {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(720deg); }
+}
+
 .coin-scene {
   perspective: 600px;
 }
@@ -183,12 +193,20 @@
   transition: none;
 }
 
+.coin-card.showing-back {
+  transform: rotateY(180deg);
+}
+
 .coin-card.flipping-to-back {
   animation: coin-flip-to-back 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .coin-card.flipping-to-front {
-  animation: coin-flip-to-front 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: coin-flip-spin-return 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.coin-card.flipping-back-to-front {
+  animation: coin-flip-back-to-front 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .coin-face {
