@@ -53,19 +53,45 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         </div>
       </div>
 
-      {/* Botões: marrom escuro, borda dourada, texto dourado, leve efeito em relevo */}
+      {/* Botões com borda dourada grossa e vibrante */}
       <div className="flex w-full max-w-xs flex-col gap-4">
         <button
           onClick={() => onNavigate("schedule")}
-          className="rounded-lg border border-gold/50 bg-[#2a2420] px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase text-gold shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.35)] transition-colors hover:border-gold/70 hover:bg-[#342d26]"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase transition-all hover:brightness-110"
+          style={{
+            background: "#2a2420",
+            border: "2.5px solid #d4a017",
+            boxShadow: "0 0 12px 3px rgba(212,160,23,0.55), 0 0 4px 1px rgba(240,188,42,0.4), inset 0 1px 0 rgba(255,255,255,0.07), 0 3px 12px rgba(0,0,0,0.5)",
+          }}
         >
-          Agendar Horário
+          <span style={{
+            background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
+          }}>
+            Agendar Horário
+          </span>
         </button>
         <button
           onClick={() => onNavigate("profile")}
-          className="rounded-lg border border-gold/50 bg-[#2a2420] px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase text-gold shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.35)] transition-colors hover:border-gold/70 hover:bg-[#342d26]"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase transition-all hover:brightness-110"
+          style={{
+            background: "#2a2420",
+            border: "2.5px solid #d4a017",
+            boxShadow: "0 0 12px 3px rgba(212,160,23,0.55), 0 0 4px 1px rgba(240,188,42,0.4), inset 0 1px 0 rgba(255,255,255,0.07), 0 3px 12px rgba(0,0,0,0.5)",
+          }}
         >
-          Meus Horários
+          <span style={{
+            background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
+          }}>
+            Meus Horários
+          </span>
         </button>
       </div>
     </div>
