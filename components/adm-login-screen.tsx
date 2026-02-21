@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Lock, Eye, EyeOff, ShieldCheck } from "lucide-react"
+import { Lock, Eye, EyeOff } from "lucide-react"
 
 interface AdmLoginScreenProps {
   onLogin: () => void
@@ -47,15 +47,32 @@ export function AdmLoginScreen({ onLogin }: AdmLoginScreenProps) {
         {/* Ícone */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div
-            className="flex h-20 w-20 items-center justify-center rounded-full"
+            className="flex-shrink-0"
             style={{
+              width: 116,
+              height: 116,
               padding: 3,
+              borderRadius: "9999px",
               background: "conic-gradient(from 0deg, #f5cc6a 0%, #e8b84b 18%, #c49a2e 35%, #fff3b0 50%, #c49a2e 65%, #e8b84b 82%, #f5cc6a 100%)",
-              boxShadow: "0 0 18px 4px rgba(212,160,23,0.4)",
+              boxShadow: "0 0 22px 6px rgba(212,160,23,0.55), 0 0 8px 2px rgba(255,243,176,0.3)",
             }}
           >
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-[#1a1410]">
-              <ShieldCheck className="h-9 w-9 text-gold" />
+            <div className="relative flex h-full w-full items-center justify-center rounded-full bg-black overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/cowboy-coin.png"
+                alt="ADM"
+                style={{
+                  position: "absolute",
+                  width: "140%",
+                  height: "140%",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -46%)",
+                  objectFit: "cover",
+                  borderRadius: "9999px",
+                }}
+              />
             </div>
           </div>
           <div className="text-center">
