@@ -15,7 +15,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     if (flipClass) return // já girando
 
     if (side === "cowboy") {
-      // qualquer clique no cowboy volta pro cavalo
+      // clique no cowboy → volta pro cavalo e reseta tudo
       setFlipClass("flipping-to-front")
       setTimeout(() => {
         setSide("horse")
@@ -25,17 +25,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
       return
     }
 
-    // lado cavalo: conta os cliques
     const newCount = clickCount + 1
-    setClickCount(newCount)
 
-    if (newCount >= 3) {
-      // 3 cliques → vai pro cowboy
+    if (newCount >= 4) {
+      // 4º clique → para no cowboy
       setFlipClass("flipping-to-back")
       setTimeout(() => {
         setSide("cowboy")
         setFlipClass("")
         setClickCount(0)
+      }, 1400)
+    } else {
+      // cliques 1, 2, 3 → gira e volta pro cavalo
+      setClickCount(newCount)
+      setFlipClass("flipping-to-front")
+      setTimeout(() => {
+        setFlipClass("")
       }, 1400)
     }
   }
