@@ -15,6 +15,8 @@ export interface BookingData {
   price: string
   date: Date
   time: string
+  clientName: string
+  phone: string
 }
 
 const SERVICES = [
@@ -65,13 +67,15 @@ const TIME_SLOTS = [
 // Simulate some taken slots
 const TAKEN_SLOTS = ["10:00", "14:00", "15:30", "18:00"]
 
-type Step = 1 | 2 | 3 | 4
+type Step = 1 | 2 | 3 | 4 | 5
 
 export function ScheduleScreen({ onBack, onConfirm }: ScheduleScreenProps) {
   const [step, setStep] = useState<Step>(1)
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [clientName, setClientName] = useState("")
+  const [phone, setPhone] = useState("")
 
   const dates = useMemo(() => {
     const today = new Date()
@@ -103,6 +107,8 @@ export function ScheduleScreen({ onBack, onConfirm }: ScheduleScreenProps) {
         price: service.price,
         date: selectedDate,
         time: selectedTime,
+        clientName: clientName.trim() || "Cliente",
+        phone: phone.trim(),
       })
     }
   }
@@ -115,7 +121,7 @@ export function ScheduleScreen({ onBack, onConfirm }: ScheduleScreenProps) {
     }
   }
 
-  const stepLabels = ["Servico", "Data", "Horario", "Confirmar"]
+  const stepLabels = ["Servico", "Data", "Horario", "Dados", "Confirmar"]
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
@@ -135,13 +141,13 @@ export function ScheduleScreen({ onBack, onConfirm }: ScheduleScreenProps) {
             </h1>
           </div>
           <span className="text-xs text-muted-foreground">
-            {step}/4
+            {step}/5
           </span>
         </div>
 
         {/* Progress bar */}
         <div className="flex gap-1 px-4 pb-3">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full transition-colors ${
@@ -331,8 +337,56 @@ export function ScheduleScreen({ onBack, onConfirm }: ScheduleScreenProps) {
         </div>
       )}
 
-      {/* Step 4: Confirmation */}
-      {step === 4 && service && selectedDate && selectedTime && (
+      {/* Step 4: Client Data */}
+      {step === 4 && (
+        <div className="flex flex-1 flex-col px-4 pt-6">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-gold/30 bg-gold/10">
+              <Scissors className="h-7 w-7 text-gold" />
+            </div>
+            <h2 className="font-serif text-xl font-bold text-foreground">Seus Dados</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Para confirmar o agendamento</p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Nome
+              </label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Seu nome completo"
+                className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-gold focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                WhatsApp
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(11) 99999-9999"
+                className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-gold focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="mt-auto pb-4 pt-6">
+            <button
+              onClick={() => clientName.trim() && setStep(5)}
+              disabled={!clientName.trim()}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-6 py-4 font-serif text-base font-bold text-primary-foreground transition-colors hover:bg-gold-light disabled:opacity-40"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Confirmation */}
+      {step === 5 && service && selectedDate && selectedTime && (
         <div className="flex flex-1 flex-col px-4 pt-6">
           <div className="mb-6 text-center">
             <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-gold/30 bg-gold/10">

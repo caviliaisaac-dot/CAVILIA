@@ -1,8 +1,8 @@
 "use client"
 
-import { Home, CalendarDays, User } from "lucide-react"
+import { Home, CalendarDays, User, ShieldCheck } from "lucide-react"
 
-type Screen = "home" | "schedule" | "profile"
+type Screen = "home" | "schedule" | "profile" | "adm"
 
 interface BottomNavProps {
   activeScreen: Screen
@@ -14,6 +14,7 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
     { id: "home", label: "Início", icon: Home },
     { id: "schedule", label: "Agendar", icon: CalendarDays },
     { id: "profile", label: "Perfil", icon: User },
+    { id: "adm", label: "ADN", icon: ShieldCheck },
   ]
 
   return (
@@ -25,14 +26,19 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
       <div className="mx-auto flex max-w-md items-center justify-around py-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {navItems.map((item) => {
           const isActive = activeScreen === item.id
+          const isAdm = item.id === "adm"
           return (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center gap-1 px-5 py-1.5 transition-colors ${
+              className={`flex flex-col items-center gap-1 px-4 py-1.5 transition-colors ${
                 isActive
-                  ? "text-gold drop-shadow-[0_0_6px_rgba(201,169,110,0.35)]"
-                  : "text-gold/40 hover:text-gold/65"
+                  ? isAdm
+                    ? "text-gold drop-shadow-[0_0_8px_rgba(212,160,23,0.6)]"
+                    : "text-gold drop-shadow-[0_0_6px_rgba(201,169,110,0.35)]"
+                  : isAdm
+                    ? "text-gold/50 hover:text-gold/75"
+                    : "text-gold/40 hover:text-gold/65"
               }`}
               aria-current={isActive ? "page" : undefined}
             >
