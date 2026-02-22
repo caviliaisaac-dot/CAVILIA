@@ -3,15 +3,18 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus } from "lucide-react"
+import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus, CalendarOff } from "lucide-react"
 import type { BookingData, ServiceItem } from "./schedule-screen"
+import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
 
 interface AdmScreenProps {
   bookings: BookingData[]
   services: ServiceItem[]
+  scheduleBlocks: ScheduleBlock
   onUpdateBooking: (index: number, updated: BookingData) => void
   onCancelBooking: (index: number) => void
   onUpdateServices: (services: ServiceItem[]) => void
+  onUpdateScheduleBlocks: (blocks: ScheduleBlock) => void
   onLogout: () => void
 }
 
@@ -22,11 +25,12 @@ const TIME_SLOTS = [
   "18:30","19:00","19:30",
 ]
 
-export function AdmScreen({ bookings, services, onUpdateBooking, onCancelBooking, onUpdateServices, onLogout }: AdmScreenProps) {
+export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking, onCancelBooking, onUpdateServices, onUpdateScheduleBlocks, onLogout }: AdmScreenProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editData, setEditData] = useState<Partial<BookingData>>({})
   const [confirmCancel, setConfirmCancel] = useState<number | null>(null)
   const [showServicesPanel, setShowServicesPanel] = useState(false)
+  const [showScheduleManager, setShowScheduleManager] = useState(false)
   const [editingService, setEditingService] = useState<number | null>(null)
   const [serviceEdit, setServiceEdit] = useState<Partial<ServiceItem>>({})
 
@@ -108,6 +112,19 @@ export function AdmScreen({ bookings, services, onUpdateBooking, onCancelBooking
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CAVILIA Studio Club</p>
           </div>
           <div className="flex items-center gap-2">
+            {/* Botão Agenda/Folgas */}
+            <button
+              onClick={() => setShowScheduleManager(true)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all"
+              style={{
+                border: "1.5px solid rgba(212,160,23,0.3)",
+                color: "rgba(212,160,23,0.6)",
+              }}
+              title="Folgas e horários bloqueados"
+            >
+              <CalendarOff className="h-3.5 w-3.5" />
+              Agenda
+            </button>
             {/* Botão Gerenciar Serviços */}
             <button
               onClick={() => setShowServicesPanel(!showServicesPanel)}
@@ -328,6 +345,15 @@ export function AdmScreen({ bookings, services, onUpdateBooking, onCancelBooking
           </>
         )}
       </div>
+
+      {/* Modal de Agenda */}
+      {showScheduleManager && (
+        <AdmScheduleManager
+          blocks={scheduleBlocks}
+          onUpdate={onUpdateScheduleBlocks}
+          onClose={() => setShowScheduleManager(false)}
+        />
+      )}
 
       {/* Dialog de confirmação de remoção */}
       {confirmCancel !== null && (

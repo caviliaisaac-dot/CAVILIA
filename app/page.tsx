@@ -19,6 +19,7 @@ export default function CaviliaApp() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [admLoggedIn, setAdmLoggedIn] = useState(false)
   const [services, setServices] = useState<ServiceItem[]>(DEFAULT_SERVICES)
+  const [scheduleBlocks, setScheduleBlocks] = useState<{ dayoffs: string[]; timeBlocks: { date: string; time: string; label: string }[] }>({ dayoffs: [], timeBlocks: [] })
   const [currentUser, setCurrentUser] = useState<UserData | null>(() => {
     if (typeof window === "undefined") return null
     const saved = localStorage.getItem("cavilia-current-user")
@@ -99,6 +100,7 @@ export default function CaviliaApp() {
             onBack={() => setActiveScreen("home")}
             onConfirm={handleConfirmBooking}
             services={services}
+            scheduleBlocks={scheduleBlocks}
           />
         )}
         {activeScreen === "profile" && (
@@ -121,9 +123,11 @@ export default function CaviliaApp() {
           <AdmScreen
             bookings={bookings}
             services={services}
+            scheduleBlocks={scheduleBlocks}
             onUpdateBooking={handleUpdateBooking}
             onCancelBooking={handleCancelBooking}
             onUpdateServices={setServices}
+            onUpdateScheduleBlocks={setScheduleBlocks}
             onLogout={() => { setAdmLoggedIn(false); setActiveScreen("home") }}
           />
         )}

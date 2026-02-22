@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { ArrowLeft, Check, Scissors, Clock, CalendarDays } from "lucide-react"
 import { format, addDays, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import type { ScheduleBlock } from "./adm-schedule-manager"
 
 export interface ServiceItem {
   id: string
@@ -17,6 +18,7 @@ interface ScheduleScreenProps {
   onBack: () => void
   onConfirm: (booking: BookingData) => void
   services?: ServiceItem[]
+  scheduleBlocks?: ScheduleBlock
 }
 
 export interface BookingData {
@@ -44,12 +46,11 @@ const TIME_SLOTS = [
   "18:30", "19:00", "19:30",
 ]
 
-// Simulate some taken slots
-const TAKEN_SLOTS = ["10:00", "14:00", "15:30", "18:00"]
+const TAKEN_SLOTS: string[] = []
 
 type Step = 1 | 2 | 3 | 4 | 5
 
-export function ScheduleScreen({ onBack, onConfirm, services: servicesProp }: ScheduleScreenProps) {
+export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, scheduleBlocks }: ScheduleScreenProps) {
   const SERVICES = servicesProp ?? DEFAULT_SERVICES
   const [step, setStep] = useState<Step>(1)
   const [selectedService, setSelectedService] = useState<string | null>(null)
@@ -60,9 +61,14 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp }: Sc
 
   const dates = useMemo(() => {
     const today = new Date()
-    return Array.from({ length: 14 }, (_, i) => addDays(today, i + 1))
-      .filter((d) => d.getDay() !== 0) // Remove Sundays
-  }, [])
+    return Array.from({ length: 21 }, (_, i) => addDays(today, i + 1))
+      .filter((d) => {
+        if (d.getDay() === 0) return false // Remove Sundays
+        const key = format(d, "yyyy-MM-dd")
+        if (scheduleBlocks?.dayoffs.includes(key)) return false // Remove folgas
+        return true
+      })
+  }, [scheduleBlocks])
 
   const service = SERVICES.find((s) => s.id === selectedService)
 
@@ -291,7 +297,11 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp }: Sc
           </p>
           <div className="grid grid-cols-3 gap-2">
             {TIME_SLOTS.map((time) => {
-              const isTaken = TAKEN_SLOTS.includes(time)
+              const dateKey = selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""
+              const isBlocked = scheduleBlocks?.timeBlocks.some(
+                (b) => b.time === time && (b.date === "*" || b.date === dateKey)
+              ) ?? false
+              const isTaken = TAKEN_SLOTS.includes(time) || isBlocked
               const isSelected = selectedTime === time
 
               return (
