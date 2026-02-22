@@ -101,6 +101,7 @@ export default function CaviliaApp() {
             onConfirm={handleConfirmBooking}
             services={services}
             scheduleBlocks={scheduleBlocks}
+            user={currentUser}
           />
         )}
         {activeScreen === "profile" && (
