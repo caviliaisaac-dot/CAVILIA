@@ -1,0 +1,28 @@
+{
+  "name": "CAVILIA Studio Club 1998",
+  "short_name": "CAVILIA",
+  "description": "Barbearia premium - Agende seu horário com elegância",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2a211c",
+  "theme_color": "#d4a017",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/images/emblem.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/emblem.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "health", "beauty"],
+  "screenshots": []
+}
