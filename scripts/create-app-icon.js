@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
-const BARBEARIA_IMAGE = 'C:\\Users\\bsbth\\.cursor\\projects\\c-Users-bsbth-cavilia\\assets\\c__Users_bsbth_AppData_Roaming_Cursor_User_workspaceStorage_b284263b4900c2200867616a3eed4240_images_WhatsApp_Image_2026-02-22_at_11.02.26-599a36ed-27d8-4681-b142-2c8c3f4fc58c.png';
+const BARBEARIA_IMAGE = 'C:\\Users\\bsbth\\.cursor\\projects\\c-Users-bsbth-cavilia\\assets\\c__Users_bsbth_AppData_Roaming_Cursor_User_workspaceStorage_b284263b4900c2200867616a3eed4240_images_image-0ea04f8a-035e-4d2f-8bfc-6bd50015b2cc.png';
 const OUTPUT_DIR = path.join(__dirname, '../public/images');
 
 async function createIcon() {
