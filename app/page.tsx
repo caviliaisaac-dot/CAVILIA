@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { HomeScreen } from "@/components/home-screen"
 import { ScheduleScreen, type BookingData, type ServiceItem, DEFAULT_SERVICES } from "@/components/schedule-screen"
 import { ProfileScreen } from "@/components/profile-screen"
@@ -45,7 +46,9 @@ export default function CaviliaApp() {
       } catch (_) {
         // ignora erro de hidratação ou dados inesperados
       }
-    }).catch(() => {})
+    }).catch(() => {
+      toast.error("Erro ao carregar dados. Verifique se o Supabase está configurado (npx prisma migrate dev)")
+    })
   }, [])
 
   function handleNavigate(screen: Screen) {
@@ -63,6 +66,7 @@ export default function CaviliaApp() {
   async function handleConfirmBooking(booking: BookingData) {
     const payload = {
       serviceName: booking.service,
+      price: booking.price,
       clientName: booking.clientName,
       phone: booking.phone,
       date: booking.date instanceof Date ? booking.date.toISOString().slice(0, 10) : booking.date,
@@ -82,20 +86,10 @@ export default function CaviliaApp() {
         await apiPost("/api/users/update", { phone: currentUser.phone, totalVisitas: novasVisitas })
       }
     } else {
-      setBookings((prev) => [...prev, booking])
-      setLastBooking(booking)
-      setShowSuccess(true)
-      if (currentUser) {
-        const novasVisitas = (currentUser.totalVisitas ?? 0) + 1
-        const updated = { ...currentUser, totalVisitas: novasVisitas }
-        setCurrentUser(updated)
-        localStorage.setItem("cavilia-current-user", JSON.stringify(updated))
-        const raw = localStorage.getItem("cavilia-users")
-        const users = raw ? JSON.parse(raw) : []
-        const idx = users.findIndex((u: UserData) => u.phone === currentUser.phone)
-        if (idx >= 0) users[idx] = updated
-        localStorage.setItem("cavilia-users", JSON.stringify(users))
-      }
+      toast.error(
+        "Não foi possível salvar o agendamento no banco de dados.",
+        { description: "Verifique se rodou: npx prisma migrate dev e npm run db:seed" }
+      )
     }
   }
 

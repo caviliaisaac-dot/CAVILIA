@@ -29,15 +29,25 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { serviceId, serviceName, userId, clientName, phone, date, time } = body
+    const { serviceId, serviceName, price, userId, clientName, phone, date, time } = body
     if (!clientName || !phone || !date || !time) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 })
     }
-    const service = serviceId
+    let service = serviceId
       ? await prisma.service.findUnique({ where: { id: serviceId } })
       : serviceName
         ? await prisma.service.findFirst({ where: { name: serviceName } })
         : null
+    if (!service && serviceName) {
+      service = await prisma.service.create({
+        data: {
+          name: serviceName,
+          desc: serviceName,
+          price: price || "R$ 0",
+          duration: "30 min",
+        },
+      })
+    }
     if (!service) return NextResponse.json({ error: "Serviço não encontrado" }, { status: 404 })
 
     let uid: string | null = userId || null

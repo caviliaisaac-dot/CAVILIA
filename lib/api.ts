@@ -17,9 +17,14 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T | null>
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
-    if (!r.ok) return null
-    return (await r.json()) as T
-  } catch {
+    const data = await r.json().catch(() => ({}))
+    if (!r.ok) {
+      console.error(`API POST ${path} falhou:`, r.status, data)
+      return null
+    }
+    return data as T
+  } catch (e) {
+    console.error(`API POST ${path} erro de rede:`, e)
     return null
   }
 }

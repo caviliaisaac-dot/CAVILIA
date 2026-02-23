@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import { PwaInstall } from '@/components/pwa-install'
 import './globals.css'
 
@@ -52,6 +53,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         {children}
+        <Toaster richColors position="top-center" />
         <PwaInstall />
         <Analytics />
       </body>
