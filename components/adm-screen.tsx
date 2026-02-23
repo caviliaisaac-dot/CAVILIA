@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus, CalendarX2, KeyRound } from "lucide-react"
+import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus, KeyRound } from "lucide-react"
 import type { BookingData, ServiceItem } from "./schedule-screen"
 import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
 import { AdmCredentials } from "./adm-credentials"
@@ -14,6 +14,7 @@ interface AdmScreenProps {
   scheduleBlocks: ScheduleBlock
   onUpdateBooking: (index: number, updated: BookingData) => void
   onCancelBooking: (index: number) => void
+  onDeleteBooking: (index: number) => void
   onUpdateServices: (services: ServiceItem[]) => void
   onUpdateScheduleBlocks: (blocks: ScheduleBlock) => void
   onLogout: () => void
@@ -26,7 +27,7 @@ const TIME_SLOTS = [
   "18:30","19:00","19:30",
 ]
 
-export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking, onCancelBooking, onUpdateServices, onUpdateScheduleBlocks, onLogout }: AdmScreenProps) {
+export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking, onCancelBooking, onDeleteBooking, onUpdateServices, onUpdateScheduleBlocks, onLogout }: AdmScreenProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editData, setEditData] = useState<Partial<BookingData>>({})
   const [confirmCancel, setConfirmCancel] = useState<number | null>(null)
@@ -124,7 +125,7 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
               }}
               title="Folgas e horários bloqueados"
             >
-              <CalendarX2 className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" />
               Agenda
             </button>
             {/* Botão Gerenciar Serviços */}
@@ -386,7 +387,7 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                 Manter
               </button>
               <button
-                onClick={() => { onCancelBooking(confirmCancel); setConfirmCancel(null) }}
+                onClick={() => { onDeleteBooking(confirmCancel); setConfirmCancel(null) }}
                 className="flex-1 rounded-lg bg-red-900/60 px-4 py-3 text-sm font-medium text-red-300 hover:bg-red-900/80"
               >
                 Remover

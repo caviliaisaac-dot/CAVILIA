@@ -59,8 +59,19 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
     reader.readAsDataURL(file)
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     setError("")
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "login", loginId: loginPhone.trim(), password: loginPass }),
+    })
+    if (res.ok) {
+      const user = await res.json()
+      localStorage.setItem("cavilia-current-user", JSON.stringify(user))
+      onAuth(user)
+      return
+    }
     const raw = localStorage.getItem("cavilia-users")
     const users: UserData[] = raw ? JSON.parse(raw) : []
     const found = users.find(
@@ -74,18 +85,39 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
     }
   }
 
-  function handleRegister() {
+  async function handleRegister() {
     setError("")
     if (!regName.trim()) return setError("Informe seu nome")
     if (regPhone.replace(/\D/g, "").length < 10) return setError("Telefone inválido")
     if (regPass.length < 4) return setError("Senha deve ter pelo menos 4 caracteres")
     if (regPass !== regConfirmPass) return setError("Senhas não conferem")
 
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "register",
+        name: regName.trim(),
+        phone: regPhone,
+        email: regEmail.trim(),
+        password: regPass,
+        photoUrl: regPhoto || undefined,
+      }),
+    })
+    if (res.ok) {
+      const newUser = await res.json()
+      localStorage.setItem("cavilia-current-user", JSON.stringify(newUser))
+      onAuth(newUser)
+      return
+    }
+    const err = await res.json().catch(() => ({}))
+    if (res.status === 409) return setError("Telefone já cadastrado")
+    if (err.error) return setError(err.error)
+
     const raw = localStorage.getItem("cavilia-users")
     const users: UserData[] = raw ? JSON.parse(raw) : []
     const exists = users.find((u) => u.phone.replace(/\D/g, "") === regPhone.replace(/\D/g, ""))
     if (exists) return setError("Telefone já cadastrado")
-
     const newUser: UserData = {
       name: regName.trim(),
       phone: regPhone,

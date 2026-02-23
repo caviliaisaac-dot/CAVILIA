@@ -23,6 +23,7 @@ interface ScheduleScreenProps {
 }
 
 export interface BookingData {
+  id?: string
   service: string
   price: string
   date: Date

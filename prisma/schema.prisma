@@ -1,0 +1,73 @@
+// CAVILIA — Supabase (PostgreSQL) via Prisma
+// Rode: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @unique
+  email        String
+  passwordHash String   @map("password_hash")
+  photoUrl     String?  @map("photo_url")
+  totalVisitas Int      @default(0) @map("total_visitas")
+  dataCadastro String   @map("data_cadastro") // ISO string
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  bookings Booking[]
+
+  @@map("users")
+}
+
+model Service {
+  id       String  @id @default(cuid())
+  name     String
+  desc     String  @map("desc")
+  price   String
+  duration String
+
+  bookings Booking[]
+
+  @@map("services")
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  serviceId  String   @map("service_id")
+  userId     String?  @map("user_id")
+  clientName String   @map("client_name")
+  phone      String
+  date       DateTime @db.Date
+  time       String   // "14:00"
+  status     String   @default("active") // active | cancelled | rescheduled
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  service Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("bookings")
+}
+
+model ScheduleDayOff {
+  id   String @id @default(cuid())
+  date String @unique // YYYY-MM-DD
+
+  @@map("schedule_day_offs")
+}
+
+model ScheduleTimeBlock {
+  id    String @id @default(cuid())
+  date  String // YYYY-MM-DD ou "*"
+  time  String // "12:00"
+  label String
+
+  @@map("schedule_time_blocks")
+}
