@@ -11,13 +11,13 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "/images/emblem-192.png",
+      "src": "/images/app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/images/emblem.png",
+      "src": "/images/app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

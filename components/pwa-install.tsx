@@ -88,7 +88,7 @@ export function PwaInstall() {
         </button>
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/emblem.png" alt="CAVILIA" className="h-12 w-12 rounded-full object-contain bg-black" />
+          <img src="/images/app-icon.png" alt="CAVILIA" className="h-12 w-12 rounded-full object-contain bg-black" />
           <div className="flex-1">
             <p className="font-serif text-sm font-bold" style={goldText}>Instalar CAVILIA</p>
             <p className="text-xs text-muted-foreground">Para baixar o aplicativo, cole o link no navegador</p>
@@ -116,7 +116,7 @@ export function PwaInstall() {
         </button>
         <div className="flex items-center gap-3 mb-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/emblem.png" alt="CAVILIA" className="h-12 w-12 rounded-full object-contain bg-black" />
+          <img src="/images/app-icon.png" alt="CAVILIA" className="h-12 w-12 rounded-full object-contain bg-black" />
           <div>
             <p className="font-serif text-sm font-bold" style={goldText}>Instalar CAVILIA no iPhone</p>
             <p className="text-xs text-muted-foreground">Adicione à tela inicial</p>

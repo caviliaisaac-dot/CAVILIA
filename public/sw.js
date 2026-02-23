@@ -3,6 +3,8 @@ const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/images/emblem.png',
+  '/images/app-icon.png',
+  '/images/app-icon-192.png',
   '/images/leather-real.png',
   '/logo-cavilia.png',
   '/images/cowboy-coin.png',
