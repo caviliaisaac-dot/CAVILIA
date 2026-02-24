@@ -83,7 +83,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               src="/images/emblem.png"
               alt="CAVILIA - Cavalo e Ferradura"
               className="rounded-full object-contain object-center"
-              style={{ width: "133%", height: "133%", marginLeft: "0%", marginTop: "-10%" }}
+              style={{ width: "138%", height: "138%", marginLeft: "0%", marginTop: "-12%" }}
               width={192}
               height={192}
             />

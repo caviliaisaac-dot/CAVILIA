@@ -79,7 +79,16 @@ export async function POST(request: Request) {
       status: booking.status,
     })
   } catch (e) {
-    console.error(e)
-    return NextResponse.json({ error: "Erro ao criar agendamento" }, { status: 500 })
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error("[bookings POST] Erro:", msg)
+    let dica: string | undefined
+    if (msg.includes("connect") || msg.includes("ECONNREFUSED")) dica = "Verifique DATABASE_URL no .env.local"
+    else if (msg.includes("Tenant") || msg.includes("user not found")) dica = "Reinicie o servidor (Ctrl+C e depois npm run dev na pasta cavilia\\cavilia)"
+    else if (msg.includes("relation") || msg.includes("does not exist")) dica = "Rode: npx prisma migrate dev --name init"
+    return NextResponse.json({
+      error: "Erro ao criar agendamento",
+      detalhe: msg,
+      dica,
+    }, { status: 500 })
   }
 }

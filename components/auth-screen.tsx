@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { toast } from "sonner"
 import { Eye, EyeOff, Camera, ArrowLeft, User, Phone, Mail, Lock, CheckCircle } from "lucide-react"
 
 export interface UserData {
@@ -108,11 +109,18 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
       const newUser = await res.json()
       localStorage.setItem("cavilia-current-user", JSON.stringify(newUser))
       onAuth(newUser)
+      toast.success("Conta criada com sucesso!")
       return
     }
     const err = await res.json().catch(() => ({}))
-    if (res.status === 409) return setError("Telefone já cadastrado")
-    if (err.error) return setError(err.error)
+    const msg = err.error || "Erro ao criar conta"
+    const dica = err.dica
+    setError(msg)
+    if (res.status === 500) {
+      toast.error(msg, dica ? { description: dica } : undefined)
+      return
+    }
+    if (res.status === 409) return
 
     const raw = localStorage.getItem("cavilia-users")
     const users: UserData[] = raw ? JSON.parse(raw) : []

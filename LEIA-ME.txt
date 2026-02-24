@@ -1,0 +1,22 @@
+CAVILIA - Como abrir o app
+==========================
+
+Pasta do projeto (onde esta o package.json):
+  C:\Users\bsbth\cavilia
+
+OPCAO 1 - Duplo clique
+  Abra o arquivo: INICIAR-APP.bat
+  Ele abre o navegador e sobe o servidor.
+
+OPCAO 2 - Terminal
+  1. Abra o terminal (PowerShell ou CMD)
+  2. Digite: cd C:\Users\bsbth\cavilia
+  3. Digite: npm run dev
+  4. Abra no navegador: http://localhost:3000
+
+Banco de dados (Supabase) ja esta configurado no .env.local.
+Se der erro ao salvar, reinicie o servidor (Ctrl+C e npm run dev de novo).
+
+Se aparecer "address already in use" ou "porta em uso":
+  - Feche o outro terminal que esta rodando o app, ou
+  - Reinicie o computador.

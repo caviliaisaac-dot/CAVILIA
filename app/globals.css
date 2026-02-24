@@ -160,6 +160,25 @@
   }
 }
 
+/* Ícones do menu inferior: tamanho fixo */
+nav[role="navigation"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  min-height: 18px;
+  flex-shrink: 0;
+}
+
+/* Garantir que ícones no app nunca fiquem gigantes (fallback se Tailwind falhar) */
+main svg,
+header svg,
+button svg {
+  max-width: 28px;
+  max-height: 28px;
+  flex-shrink: 0;
+}
+
+
 /* Animação de moeda girando */
 @keyframes coin-flip-to-back {
   0%   { transform: rotateY(0deg); }
@@ -183,14 +202,19 @@
 
 .coin-scene {
   perspective: 600px;
+  max-width: 140px;
+  max-height: 140px;
 }
 
 .coin-card {
   position: relative;
   width: 124px;
   height: 124px;
+  max-width: 124px;
+  max-height: 124px;
   transform-style: preserve-3d;
   transition: none;
+  flex-shrink: 0;
 }
 
 .coin-card.showing-back {
@@ -243,6 +267,10 @@
 .emblem-ring {
   padding: 4px;
   border-radius: 9999px;
+  width: 132px;
+  height: 132px;
+  max-width: 132px;
+  max-height: 132px;
   background: conic-gradient(from 0deg, #f5cc6a 0%, #e8b84b 18%, #c49a2e 35%, #fff3b0 50%, #c49a2e 65%, #e8b84b 82%, #f5cc6a 100%);
   box-shadow: 0 0 18px 4px rgba(212,160,23,0.45), 0 0 6px 1px rgba(255,243,176,0.3);
   transition: box-shadow 0.25s ease, filter 0.25s ease, transform 0.25s ease;

@@ -72,24 +72,33 @@ export default function CaviliaApp() {
       date: booking.date instanceof Date ? booking.date.toISOString().slice(0, 10) : booking.date,
       time: booking.time,
     }
-    const created = await apiPost<BookingData & { id: string; date: string }>("/api/bookings", payload)
-    if (created) {
-      const withId: BookingData = { ...booking, id: created.id, date: new Date(created.date) }
-      setBookings((prev) => [...prev, withId])
-      setLastBooking(withId)
-      setShowSuccess(true)
-      if (currentUser) {
-        const novasVisitas = (currentUser.totalVisitas ?? 0) + 1
-        const updated = { ...currentUser, totalVisitas: novasVisitas }
-        setCurrentUser(updated)
-        localStorage.setItem("cavilia-current-user", JSON.stringify(updated))
-        await apiPost("/api/users/update", { phone: currentUser.phone, totalVisitas: novasVisitas })
+    try {
+      const r = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const data = await r.json().catch(() => ({}))
+      if (r.ok) {
+        const created = data as BookingData & { id: string; date: string }
+        const withId: BookingData = { ...booking, id: created.id, date: new Date(created.date) }
+        setBookings((prev) => [...prev, withId])
+        setLastBooking(withId)
+        setShowSuccess(true)
+        if (currentUser) {
+          const novasVisitas = (currentUser.totalVisitas ?? 0) + 1
+          const updated = { ...currentUser, totalVisitas: novasVisitas }
+          setCurrentUser(updated)
+          localStorage.setItem("cavilia-current-user", JSON.stringify(updated))
+          await apiPost("/api/users/update", { phone: currentUser.phone, totalVisitas: novasVisitas })
+        }
+      } else {
+        const msg = data.error || "Não foi possível salvar o agendamento."
+        const dica = data.dica || (r.status === 500 ? "Reinicie o servidor (Ctrl+C e npm run dev) na pasta cavilia\\cavilia" : undefined)
+        toast.error(msg, { description: dica })
       }
-    } else {
-      toast.error(
-        "Não foi possível salvar o agendamento no banco de dados.",
-        { description: "Verifique se rodou: npx prisma migrate dev e npm run db:seed" }
-      )
+    } catch (e) {
+      toast.error("Erro de rede ao salvar.", { description: "Verifique se o servidor está rodando (npm run dev na pasta cavilia\\cavilia)" })
     }
   }
 

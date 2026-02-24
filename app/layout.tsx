@@ -5,8 +5,8 @@ import { Toaster } from 'sonner'
 import { PwaInstall } from '@/components/pwa-install'
 import './globals.css'
 
-const _inter = Inter({ subsets: ['latin'] })
-const _playfair = Playfair_Display({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] })
+const playfair = Playfair_Display({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'CAVILIA - Studio Club 1998',
@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/images/app-icon.png" />
@@ -51,7 +51,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CAVILIA" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="font-sans antialiased">
+      <body className={`${inter.className} font-sans antialiased`}>
         {children}
         <Toaster richColors position="top-center" />
         <PwaInstall />

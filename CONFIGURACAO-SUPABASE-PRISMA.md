@@ -112,3 +112,32 @@ Abra **http://localhost:3000**. Os dados de agendamentos, serviços, usuários e
 - **ScheduleTimeBlock** — horários bloqueados (data, horário, label)
 
 Qualquer dúvida em um passo, pare nesse passo e confira a URL, a senha e o conteúdo do `.env.local`.
+
+---
+
+## Supabase não está salvando? Diagnóstico
+
+1. **Teste a conexão:** Com o app rodando (`npm run dev`), acesse:
+   ```
+   http://localhost:3000/api/db-check
+   ```
+   - Se retornar `"ok": true` → conexão OK. Se `services: 0`, rode `npm run db:seed`.
+   - Se retornar erro → veja o campo `solucao` na resposta.
+
+2. **Checklist:**
+   - [ ] `.env.local` existe na pasta `cavilia` (não na raiz do projeto)
+   - [ ] `DATABASE_URL` usa porta **6543** e termina com `?pgbouncer=true`
+   - [ ] `DIRECT_URL` usa porta **5432** (sem pgbouncer)
+   - [ ] A senha em `[YOUR-PASSWORD]` foi substituída pela senha real do projeto
+   - [ ] Rodou `npx prisma migrate dev --name init` (cria as tabelas)
+   - [ ] Rodou `npm run db:seed` (opcional, mas recomendado)
+   - [ ] Reiniciou o servidor (`npm run dev`) após alterar o `.env`
+
+3. **Onde fica o `.env.local`?** Na mesma pasta do `package.json`:
+   ```
+   cavilia/
+   ├── .env.local    ← aqui
+   ├── package.json
+   ├── prisma/
+   └── app/
+   ```

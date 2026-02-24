@@ -42,7 +42,7 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
               }`}
               aria-current={isActive ? "page" : undefined}
             >
-              <item.icon className={`h-[18px] w-[18px] ${isActive ? "stroke-[2.5]" : ""}`} />
+              <item.icon className={`shrink-0 ${isActive ? "stroke-[2.5]" : ""}`} size={18} style={{ width: 18, height: 18 }} />
               <span
                 className={`text-[10px] font-medium tracking-wide uppercase ${
                   isActive ? "border-b border-gold/60 pb-0.5" : ""
