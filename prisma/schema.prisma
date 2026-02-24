@@ -11,6 +11,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum ReminderUnit {
+  day
+  hour
+  minute
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -70,4 +76,13 @@ model ScheduleTimeBlock {
   label String
 
   @@map("schedule_time_blocks")
+}
+
+model ReminderSetting {
+  id         String        @id @default(cuid())
+  unidade    ReminderUnit
+  quantidade Int
+  ativo      Boolean       @default(true)
+
+  @@map("reminder_settings")
 }

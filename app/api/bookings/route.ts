@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
+import { scheduleAppointmentReminders } from "@/lib/reminders"
 
 export const dynamic = "force-dynamic"
 
@@ -68,6 +69,20 @@ export async function POST(request: Request) {
       },
       include: { service: true },
     })
+
+    scheduleAppointmentReminders({
+      id: booking.id,
+      date: booking.date,
+      time: booking.time,
+      clientName: booking.clientName,
+      phone: booking.phone,
+      service: { name: booking.service.name },
+    }).then((scheduled) => {
+      if (scheduled.length > 0) {
+        console.log("[bookings] Lembretes agendados:", booking.id, scheduled.map((s) => ({ sendAt: s.sendAt.toISOString(), label: s.label })))
+      }
+    }).catch((err) => console.error("[bookings] Erro ao agendar lembretes:", err))
+
     return NextResponse.json({
       id: booking.id,
       service: booking.service.name,
