@@ -104,9 +104,9 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
     <div className="flex min-h-screen flex-col pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-lg font-bold" style={{
+        <div className="px-4 py-3 flex flex-col items-center gap-3">
+          <div className="text-center">
+            <h1 className="font-serif text-base font-bold" style={{
               background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -114,60 +114,58 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
             }}>
               Painel ADM
             </h1>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CAVILIA Studio Club</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">CAVILIA Studio Club</p>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Botão Agenda/Folgas */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
             <button
               onClick={() => setShowScheduleManager(true)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-medium transition-all"
               style={{
                 border: "1.5px solid rgba(212,160,23,0.3)",
                 color: "rgba(212,160,23,0.6)",
               }}
               title="Folgas e horários bloqueados"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
               Agenda
             </button>
-            {/* Botão Gerenciar Serviços */}
             <button
               onClick={() => setShowServicesPanel(!showServicesPanel)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-medium transition-all"
               style={{
                 border: showServicesPanel ? "1.5px solid #d4a017" : "1.5px solid rgba(212,160,23,0.3)",
                 color: showServicesPanel ? "#d4a017" : "rgba(212,160,23,0.6)",
                 background: showServicesPanel ? "rgba(212,160,23,0.08)" : "transparent",
               }}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-3 w-3" />
               Serviços
-              {showServicesPanel ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {showServicesPanel ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
             </button>
             <button
               onClick={() => setShowReminderSettings(true)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-medium transition-all"
               style={{
                 border: "1.5px solid rgba(212,160,23,0.3)",
                 color: "rgba(212,160,23,0.6)",
               }}
               title="Configurações de Lembretes"
             >
-              <Bell className="h-3.5 w-3.5" />
+              <Bell className="h-3 w-3" />
               Lembretes
             </button>
             <button
               onClick={() => setShowCredentials(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-gold/40 hover:text-gold"
+              className="flex items-center justify-center rounded-md p-1.5 border border-border text-muted-foreground transition-colors hover:border-gold/40 hover:text-gold"
               title="Credenciais ADM"
             >
-              <KeyRound className="h-3.5 w-3.5" />
+              <KeyRound className="h-3 w-3" />
             </button>
             <button
               onClick={onLogout}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-red-500/40 hover:text-red-400"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-red-500/40 hover:text-red-400 border border-transparent hover:border-red-500/40"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-3 w-3" />
               Sair
             </button>
           </div>
