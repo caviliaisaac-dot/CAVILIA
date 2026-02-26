@@ -10,18 +10,40 @@ import { getLevelConfig, visitasParaProximoNivel, progressoNivel } from "@/lib/c
 
 interface ProfileScreenProps {
   bookings: BookingData[]
+  allBookings?: BookingData[]
   user: UserData | null
   onCancelBooking: (index: number) => void
   onUpdateUser: (user: UserData) => void
   onLogout: () => void
 }
 
-export function ProfileScreen({ bookings, user, onCancelBooking, onUpdateUser, onLogout }: ProfileScreenProps) {
+function normalizePhone(phone: string) {
+  if (!phone || typeof phone !== "string") return ""
+  const digits = phone.replace(/\D/g, "")
+  // Remove código do país 55 (Brasil) se estiver no início
+  if (digits.length >= 12 && digits.startsWith("55")) {
+    return digits.slice(2)
+  }
+  return digits
+}
+
+function isSamePhone(a: string, b: string) {
+  const na = normalizePhone(a)
+  const nb = normalizePhone(b)
+  if (!na || !nb) return false
+  return na === nb
+}
+
+export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, onUpdateUser, onLogout }: ProfileScreenProps) {
   const [showCancelDialog, setShowCancelDialog] = useState<number | null>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
 
-  const upcomingBookings = bookings.filter((b) => b.status !== "cancelled" && b.date >= new Date())
-  const pastBookings = bookings.filter((b) => b.status !== "cancelled" && b.date < new Date())
+  // Perfil mostra só os agendamentos passados (já filtrados pela API ou pelo parent)
+  const myBookings = user ? bookings : []
+  const fullList = allBookings ?? bookings
+
+  const upcomingBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date >= new Date())
+  const pastBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date < new Date())
 
   function handleCancel(index: number) {
     onCancelBooking(index)
@@ -144,22 +166,22 @@ export function ProfileScreen({ bookings, user, onCancelBooking, onUpdateUser, o
         )}
       </header>
 
-      {/* Stats */}
+      {/* Stats — só do cliente logado */}
       <div className="grid grid-cols-3 border-b border-border">
         <div className="flex flex-col items-center border-r border-border py-4">
           <span className="font-serif text-2xl font-bold text-gold">
-            {bookings.length}
+            {myBookings.length}
           </span>
           <span className="text-[10px] text-muted-foreground">Total</span>
         </div>
         <div className="flex flex-col items-center border-r border-border py-4">
-          <span className="font-serif text-2xl font-bold text-foreground">
+          <span className="font-serif text-2xl font-bold text-gold">
             {upcomingBookings.length}
           </span>
           <span className="text-[10px] text-muted-foreground">Proximos</span>
         </div>
         <div className="flex flex-col items-center py-4">
-          <span className="font-serif text-2xl font-bold text-foreground">
+          <span className="font-serif text-2xl font-bold text-gold">
             {pastBookings.length}
           </span>
           <span className="text-[10px] text-muted-foreground">Realizados</span>
@@ -181,10 +203,10 @@ export function ProfileScreen({ bookings, user, onCancelBooking, onUpdateUser, o
             <div className="rounded-lg border border-dashed border-border bg-card px-6 py-8 text-center">
               <Scissors className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">
-                Nenhum agendamento futuro
+                {user ? "Nenhum agendamento futuro" : "Faça login para ver seus agendamentos"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground/60">
-                Agende pelo menu Agendar
+                {user ? "Agende pelo menu Agendar" : "Use o menu Agendar para entrar na sua conta"}
               </p>
             </div>
           ) : (
@@ -216,7 +238,10 @@ export function ProfileScreen({ bookings, user, onCancelBooking, onUpdateUser, o
                       {booking.price}
                     </span>
                     <button
-                      onClick={() => setShowCancelDialog(i)}
+                      onClick={() => {
+                        const fullIndex = fullList.findIndex((b) => b.id === booking.id)
+                        if (fullIndex >= 0) setShowCancelDialog(fullIndex)
+                      }}
                       className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors hover:border-destructive-foreground/30 hover:bg-destructive/20"
                       aria-label="Cancelar agendamento"
                     >

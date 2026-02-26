@@ -20,7 +20,7 @@ export async function GET() {
           DATABASE_URL: hasDbUrl ? "✓ definida" : "✗ NÃO definida",
           DIRECT_URL: hasDirectUrl ? "✓ definida" : "✗ NÃO definida",
         },
-        solucao: "Crie .env.local com DATABASE_URL e DIRECT_URL (veja .env.example)",
+        solucao: "Na Vercel: Settings → Environment Variables. Adicione DATABASE_URL e DIRECT_URL. Depois: Redeploy.",
       }, { status: 500 })
     }
 

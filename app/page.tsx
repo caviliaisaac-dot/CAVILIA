@@ -31,6 +31,7 @@ export default function CaviliaApp() {
       return null
     }
   })
+  const [profileBookings, setProfileBookings] = useState<BookingData[]>([])
   const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
@@ -50,6 +51,21 @@ export default function CaviliaApp() {
       toast.error("Erro ao carregar dados. Verifique se o Supabase está configurado (npx prisma migrate dev)")
     })
   }, [])
+
+  // Agendamentos só do usuário logado (para o perfil)
+  useEffect(() => {
+    if (!currentUser?.phone) {
+      setProfileBookings([])
+      return
+    }
+    const phone = encodeURIComponent(currentUser.phone)
+    apiGet<Array<{ id: string; service: string; price: string; date: string; time: string; clientName: string; phone: string; status: string }>>(`/api/bookings?phone=${phone}`)
+      .then((b) => {
+        if (b) setProfileBookings(b.map((x) => ({ id: x.id, service: x.service, price: x.price, date: new Date(x.date), time: x.time, clientName: x.clientName, phone: x.phone, status: x.status as "active" | "cancelled" | "rescheduled" })))
+        else setProfileBookings([])
+      })
+      .catch(() => setProfileBookings([]))
+  }, [currentUser?.phone])
 
   function handleNavigate(screen: Screen) {
     setShowSuccess(false)
@@ -83,6 +99,9 @@ export default function CaviliaApp() {
         const created = data as BookingData & { id: string; date: string }
         const withId: BookingData = { ...booking, id: created.id, date: new Date(created.date) }
         setBookings((prev) => [...prev, withId])
+        if (currentUser && (booking.phone === currentUser.phone || booking.phone.replace(/\D/g, "") === currentUser.phone.replace(/\D/g, ""))) {
+          setProfileBookings((prev) => [...prev, withId])
+        }
         setLastBooking(withId)
         setShowSuccess(true)
         if (currentUser) {
@@ -94,11 +113,13 @@ export default function CaviliaApp() {
         }
       } else {
         const msg = data.error || "Não foi possível salvar o agendamento."
-        const dica = data.dica || (r.status === 500 ? "Reinicie o servidor (Ctrl+C e npm run dev) na pasta cavilia\\cavilia" : undefined)
-        toast.error(msg, { description: dica })
+        const desc = data.detalhe || data.dica || (r.status === 500 ? "Verifique as variáveis DATABASE_URL e DIRECT_URL na Vercel (Settings → Environment Variables)" : undefined)
+        toast.error(msg, { description: desc })
       }
-    } catch (e) {
-      toast.error("Erro de rede ao salvar.", { description: "Verifique se o servidor está rodando (npm run dev na pasta cavilia\\cavilia)" })
+    } catch {
+      toast.error("Erro de rede ao salvar.", {
+        description: "Verifique se DATABASE_URL e DIRECT_URL estão na Vercel. Acesse /api/db-check para diagnosticar.",
+      })
     }
   }
 
@@ -106,7 +127,10 @@ export default function CaviliaApp() {
     const b = bookings[index]
     if (b?.id) {
       const ok = await apiPatch<BookingData>(`/api/bookings/${b.id}`, { status: "cancelled" })
-      if (ok) setBookings((prev) => prev.map((bk, i) => (i === index ? { ...bk, status: "cancelled" as const } : bk)))
+      if (ok) {
+        setBookings((prev) => prev.map((bk, i) => (i === index ? { ...bk, status: "cancelled" as const } : bk)))
+        setProfileBookings((prev) => prev.map((bk) => (bk.id === b.id ? { ...bk, status: "cancelled" as const } : bk)))
+      }
       return
     }
     setBookings((prev) => prev.map((bk, i) => (i === index ? { ...bk, status: "cancelled" as const } : bk)))
@@ -176,7 +200,8 @@ export default function CaviliaApp() {
         )}
         {activeScreen === "profile" && (
           <ProfileScreen
-            bookings={bookings}
+            bookings={profileBookings}
+            allBookings={bookings}
             user={currentUser}
             onCancelBooking={handleCancelBooking}
             onUpdateUser={async (u) => {

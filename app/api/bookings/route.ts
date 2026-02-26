@@ -4,13 +4,17 @@ import { scheduleAppointmentReminders } from "@/lib/reminders"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const phoneParam = searchParams.get("phone")
+
     const list = await prisma.booking.findMany({
       orderBy: [{ date: "asc" }, { time: "asc" }],
       include: { service: true, user: true },
     })
-    const data = list.map((b) => ({
+
+    let data = list.map((b) => ({
       id: b.id,
       service: b.service.name,
       price: b.service.price,
@@ -20,6 +24,19 @@ export async function GET() {
       phone: b.phone,
       status: b.status as "active" | "cancelled" | "rescheduled",
     }))
+
+    // Filtro por telefone: só agendamentos do cliente (perfil)
+    if (phoneParam && phoneParam.trim()) {
+      const normalize = (p: string) => {
+        const d = p.replace(/\D/g, "")
+        return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d
+      }
+      const want = normalize(phoneParam.trim())
+      if (want) {
+        data = data.filter((b) => normalize(b.phone) === want)
+      }
+    }
+
     return NextResponse.json(data)
   } catch (e) {
     console.error(e)
