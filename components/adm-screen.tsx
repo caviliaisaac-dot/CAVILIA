@@ -183,7 +183,7 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                 <Plus className="h-3 w-3" /> Adicionar
               </button>
             </div>
-            <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
+            <div className="flex flex-col gap-3 max-h-[65vh] overflow-y-auto pr-1">
               {services.map((svc, i) => (
                 <div key={svc.id} className="rounded-lg border border-border bg-card overflow-hidden">
                   {editingService === i ? (
@@ -224,7 +224,7 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center justify-between px-3.5 py-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{svc.name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{svc.desc} • {svc.duration}</p>
