@@ -26,18 +26,33 @@ export async function PUT(request: Request) {
     if (!Array.isArray(body)) {
       return NextResponse.json({ error: "Envie um array de serviços" }, { status: 400 })
     }
+
+    const keptIds: string[] = []
+
     for (const s of body) {
       const data = { name: s.name, desc: s.desc ?? "", price: s.price, duration: s.duration }
       if (s.id) {
-        await prisma.service.upsert({
+        const saved = await prisma.service.upsert({
           where: { id: s.id },
           create: { id: s.id, ...data },
           update: data,
         })
+        keptIds.push(saved.id)
       } else {
-        await prisma.service.create({ data })
+        const created = await prisma.service.create({ data })
+        keptIds.push(created.id)
       }
     }
+
+    // Remove do banco qualquer serviço que não esteja mais na lista enviada
+    if (keptIds.length > 0) {
+      await prisma.service.deleteMany({
+        where: {
+          id: { notIn: keptIds },
+        },
+      })
+    }
+
     const list = await prisma.service.findMany({ orderBy: { name: "asc" } })
     return NextResponse.json(
       list.map((s) => ({ id: s.id, name: s.name, desc: s.desc, price: s.price, duration: s.duration }))
