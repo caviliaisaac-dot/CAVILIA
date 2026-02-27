@@ -238,18 +238,26 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between px-4 py-4 min-h-[72px]">
+                    <div className="flex items-center justify-between px-4 py-4 min-h-[80px]">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">{svc.name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{svc.desc} • {svc.duration}</p>
                       </div>
-                      <div className="flex items-center gap-2 ml-2">
-                        <span className="text-xs font-bold text-gold">{svc.price}</span>
-                        <button onClick={() => startServiceEdit(i)} className="text-muted-foreground hover:text-gold">
-                          <Pencil className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-3 ml-3">
+                        <span className="text-sm font-bold text-gold">{svc.price}</span>
+                        <button
+                          onClick={() => startServiceEdit(i)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground hover:border-gold/60 hover:text-gold active:scale-95"
+                          aria-label="Editar serviço"
+                        >
+                          <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-red-400">
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <button
+                          onClick={() => removeService(i)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500/40 bg-red-900/40 text-red-300 hover:border-red-400 hover:text-red-200 active:scale-95"
+                          aria-label="Apagar serviço"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
