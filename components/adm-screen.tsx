@@ -4,7 +4,7 @@ import { useState } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus, KeyRound, Bell } from "lucide-react"
-import type { BookingData, ServiceItem } from "./schedule-screen"
+import { DEFAULT_SERVICES, type BookingData, type ServiceItem } from "./schedule-screen"
 import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
 import { AdmCredentials } from "./adm-credentials"
 import { AdmReminderSettings } from "./adm-reminder-settings"
@@ -67,6 +67,12 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
 
   function removeService(i: number) {
     onUpdateServices(services.filter((_, idx) => idx !== i))
+  }
+
+  function resetServicesToDefault() {
+    onUpdateServices(DEFAULT_SERVICES)
+    setEditingService(null)
+    setServiceEdit({})
   }
 
   function startEdit(index: number) {
@@ -174,14 +180,22 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
         {/* Painel de Serviços */}
         {showServicesPanel && (
           <div className="border-t border-border/50 bg-background/98 px-4 pb-4 pt-3">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-gold">Gerenciar Serviços</p>
-              <button
-                onClick={addService}
-                className="flex items-center gap-1 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1.5 text-[10px] font-medium text-gold hover:bg-gold/20"
-              >
-                <Plus className="h-3 w-3" /> Adicionar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={resetServicesToDefault}
+                  className="rounded-lg border border-border bg-card px-2 py-1 text-[9px] font-medium text-muted-foreground hover:border-gold/40 hover:text-gold"
+                >
+                  Restaurar padrão
+                </button>
+                <button
+                  onClick={addService}
+                  className="flex items-center gap-1 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1.5 text-[10px] font-medium text-gold hover:bg-gold/20"
+                >
+                  <Plus className="h-3 w-3" /> Adicionar
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-5 max-h-[60vh] overflow-y-auto pr-1 pb-3">
               {services.map((svc, i) => (
