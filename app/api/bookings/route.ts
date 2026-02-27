@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { scheduleAppointmentReminders } from "@/lib/reminders"
+import { createScheduledNotifications } from "@/lib/push-notifications"
 
 export const dynamic = "force-dynamic"
 
@@ -94,9 +95,20 @@ export async function POST(request: Request) {
       clientName: booking.clientName,
       phone: booking.phone,
       service: { name: booking.service.name },
-    }).then((scheduled) => {
+    }).then(async (scheduled) => {
       if (scheduled.length > 0) {
         console.log("[bookings] Lembretes agendados:", booking.id, scheduled.map((s) => ({ sendAt: s.sendAt.toISOString(), label: s.label })))
+        await createScheduledNotifications(
+          {
+            id: booking.id,
+            clientName: booking.clientName,
+            phone: booking.phone,
+            serviceName: booking.service.name,
+            date: booking.date,
+            time: booking.time,
+          },
+          scheduled
+        )
       }
     }).catch((err) => console.error("[bookings] Erro ao agendar lembretes:", err))
 

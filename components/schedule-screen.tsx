@@ -49,7 +49,16 @@ const TIME_SLOTS = [
   "21:00", "21:30", "22:00",
 ]
 
+const CLOSING_HOUR = 22
+const CLOSING_MINUTE = 0
+
 const TAKEN_SLOTS: string[] = []
+
+function isTodayStillOpen(now: Date): boolean {
+  const h = now.getHours()
+  const m = now.getMinutes()
+  return h < CLOSING_HOUR || (h === CLOSING_HOUR && m < CLOSING_MINUTE)
+}
 
 type Step = 1 | 2 | 3 | 4
 
@@ -62,13 +71,16 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
 
   const dates = useMemo(() => {
     const today = new Date()
-    return Array.from({ length: 21 }, (_, i) => addDays(today, i + 1))
-      .filter((d) => {
-        if (d.getDay() === 0) return false // Remove Sundays
-        const key = format(d, "yyyy-MM-dd")
-        if (scheduleBlocks?.dayoffs.includes(key)) return false // Remove folgas
-        return true
-      })
+    today.setHours(0, 0, 0, 0)
+    const includeToday = isTodayStillOpen(new Date()) && today.getDay() !== 0
+    const startOffset = includeToday ? 0 : 1
+    const rawDates = Array.from({ length: 21 }, (_, i) => addDays(today, startOffset + i))
+    return rawDates.filter((d) => {
+      if (d.getDay() === 0) return false
+      const key = format(d, "yyyy-MM-dd")
+      if (scheduleBlocks?.dayoffs.includes(key)) return false
+      return true
+    })
   }, [scheduleBlocks])
 
   const service = SERVICES.find((s) => s.id === selectedService)
@@ -302,7 +314,15 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
               const isBlocked = scheduleBlocks?.timeBlocks.some(
                 (b) => b.time === time && (b.date === "*" || b.date === dateKey)
               ) ?? false
-              const isTaken = TAKEN_SLOTS.includes(time) || isBlocked
+              const now = new Date()
+              const isToday = selectedDate && isSameDay(selectedDate, now)
+              const isPastSlot = isToday && (() => {
+                const [h, m] = time.split(":").map(Number)
+                const slotMinutes = h * 60 + m
+                const nowMinutes = now.getHours() * 60 + now.getMinutes()
+                return slotMinutes <= nowMinutes
+              })()
+              const isTaken = TAKEN_SLOTS.includes(time) || isBlocked || isPastSlot
               const isSelected = selectedTime === time
 
               return (

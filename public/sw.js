@@ -31,3 +31,49 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   )
 })
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+  let data = { title: 'Lembrete CAVILIA', body: '', icon: '/images/app-icon.png', image: '/images/emblem.png', sound: null }
+  try {
+    const payload = event.data.json()
+    data = { ...data, ...payload }
+  } catch (_) {
+    data.body = event.data.text()
+  }
+  const opts = {
+    body: data.body,
+    icon: data.icon,
+    image: data.image,
+    tag: data.tag || 'cavilia-reminder',
+    requireInteraction: false,
+    silent: false,
+    data: { url: '/', ...data }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, opts).then(() => {
+      if (data.sound) {
+        try {
+          const audio = new Audio(data.sound)
+          audio.volume = 0.5
+          audio.play().catch(() => {})
+        } catch (_) {}
+      }
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = event.notification.data?.url || '/'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      if (clientList.length > 0 && clientList[0].url) {
+        clientList[0].focus()
+        clientList[0].navigate(url)
+      } else if (self.clients.openWindow) {
+        self.clients.openWindow(url)
+      }
+    })
+  )
+})

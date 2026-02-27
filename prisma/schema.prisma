@@ -79,10 +79,48 @@ model ScheduleTimeBlock {
 }
 
 model ReminderSetting {
-  id         String        @id @default(cuid())
-  unidade    ReminderUnit
-  quantidade Int
-  ativo      Boolean       @default(true)
+  id                String        @id @default(cuid())
+  unidade           ReminderUnit
+  quantidade        Int
+  quantidadeDias    Int           @default(0) @map("quantidade_dias")
+  quantidadeHoras   Int           @default(0) @map("quantidade_horas")
+  quantidadeMinutos Int           @default(0) @map("quantidade_minutos")
+  ativo             Boolean       @default(true)
 
   @@map("reminder_settings")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  phone     String   @map("phone")
+  endpoint  String   @map("endpoint")
+  p256dh    String   @map("p256dh")
+  auth      String   @map("auth")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([phone])
+  @@map("push_subscriptions")
+}
+
+model ScheduledNotification {
+  id          String    @id @default(cuid())
+  bookingId   String    @map("booking_id")
+  sendAt      DateTime  @map("send_at")
+  clientName  String    @map("client_name")
+  phone       String    @map("phone")
+  serviceName String    @map("service_name")
+  date        String    @map("date")
+  time        String    @map("time")
+  messageText String    @map("message_text")
+  sentAt      DateTime? @map("sent_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("scheduled_notifications")
+}
+
+model ReminderMessage {
+  id       String @id @default(cuid())
+  mensagem String
+
+  @@map("reminder_message")
 }

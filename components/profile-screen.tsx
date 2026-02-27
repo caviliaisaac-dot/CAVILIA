@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { CalendarDays, Clock, X, Scissors, ChevronRight, Camera, LogOut, User } from "lucide-react"
+import { CalendarDays, Clock, X, Scissors, ChevronRight, Camera, LogOut, Bell } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { BookingData } from "./schedule-screen"
 import type { UserData } from "./auth-screen"
 import { getLevelConfig, visitasParaProximoNivel, progressoNivel } from "@/lib/client-level"
+import { subscribeToPushNotifications } from "@/lib/push-client"
 
 interface ProfileScreenProps {
   bookings: BookingData[]
@@ -36,6 +37,8 @@ function isSamePhone(a: string, b: string) {
 
 export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, onUpdateUser, onLogout }: ProfileScreenProps) {
   const [showCancelDialog, setShowCancelDialog] = useState<number | null>(null)
+  const [pushSubscribing, setPushSubscribing] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
 
   // Perfil mostra só os agendamentos passados (já filtrados pela API ou pelo parent)
@@ -162,6 +165,21 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           >
             <LogOut className="h-3.5 w-3.5" />
             Sair da conta
+          </button>
+        )}
+        {user && (
+          <button
+            onClick={async () => {
+              setPushSubscribing(true)
+              const ok = await subscribeToPushNotifications(user.phone)
+              setPushEnabled(ok)
+              setPushSubscribing(false)
+            }}
+            disabled={pushSubscribing || pushEnabled || (typeof Notification !== "undefined" && Notification.permission === "granted")}
+            className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-gold transition-colors disabled:opacity-50"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            {pushSubscribing ? "Ativando…" : pushEnabled || (typeof Notification !== "undefined" && Notification.permission === "granted") ? "Notificações ativas" : "Receber lembretes no celular"}
           </button>
         )}
       </header>

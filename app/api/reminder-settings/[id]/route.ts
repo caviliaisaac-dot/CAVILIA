@@ -27,6 +27,9 @@ export async function PATCH(
       unidade: updated.unidade,
       quantidade: updated.quantidade,
       ativo: updated.ativo,
+      quantidadeDias: updated.quantidadeDias ?? 0,
+      quantidadeHoras: updated.quantidadeHoras ?? 0,
+      quantidadeMinutos: updated.quantidadeMinutos ?? 0,
     })
   } catch (e) {
     console.error("[reminder-settings PATCH]", e)

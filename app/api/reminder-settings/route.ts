@@ -16,6 +16,9 @@ export async function GET() {
         unidade: r.unidade,
         quantidade: r.quantidade,
         ativo: r.ativo,
+        quantidadeDias: r.quantidadeDias ?? 0,
+        quantidadeHoras: r.quantidadeHoras ?? 0,
+        quantidadeMinutos: r.quantidadeMinutos ?? 0,
       }))
     )
   } catch (e) {
@@ -27,7 +30,35 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { unidade, quantidade, ativo } = body
+    const { unidade, quantidade, ativo, dias, horas, minutos } = body
+
+    const qDias = Math.max(0, Number(dias) || 0)
+    const qHoras = Math.max(0, Number(horas) || 0)
+    const qMinutos = Math.max(0, Number(minutos) || 0)
+    const isComposite = qDias > 0 || qHoras > 0 || qMinutos > 0
+
+    if (isComposite) {
+      const created = await prisma.reminderSetting.create({
+        data: {
+          unidade: "minute",
+          quantidade: 0,
+          quantidadeDias: qDias,
+          quantidadeHoras: qHoras,
+          quantidadeMinutos: qMinutos,
+          ativo: ativo !== false,
+        },
+      })
+      return NextResponse.json({
+        id: created.id,
+        unidade: created.unidade,
+        quantidade: created.quantidade,
+        ativo: created.ativo,
+        quantidadeDias: created.quantidadeDias,
+        quantidadeHoras: created.quantidadeHoras,
+        quantidadeMinutos: created.quantidadeMinutos,
+      })
+    }
+
     if (!unidade || !VALID_UNITS.includes(unidade)) {
       return NextResponse.json(
         { error: "unidade inválida. Use: day, hour ou minute" },
@@ -50,6 +81,9 @@ export async function POST(request: Request) {
       unidade: created.unidade,
       quantidade: created.quantidade,
       ativo: created.ativo,
+      quantidadeDias: 0,
+      quantidadeHoras: 0,
+      quantidadeMinutos: 0,
     })
   } catch (e) {
     console.error("[reminder-settings POST]", e)

@@ -10,6 +10,9 @@ export interface ReminderSettingItem {
   unidade: ReminderUnit
   quantidade: number
   ativo: boolean
+  quantidadeDias?: number
+  quantidadeHoras?: number
+  quantidadeMinutos?: number
 }
 
 const UNIDADE_LABEL: Record<ReminderUnit, string> = {
@@ -27,8 +30,12 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [adding, setAdding] = useState(false)
+  const [modeComposite, setModeComposite] = useState(false)
   const [newUnidade, setNewUnidade] = useState<ReminderUnit>("hour")
   const [newQuantidade, setNewQuantidade] = useState(1)
+  const [newDias, setNewDias] = useState(0)
+  const [newHoras, setNewHoras] = useState(0)
+  const [newMinutos, setNewMinutos] = useState(15)
 
   async function fetchList() {
     setLoading(true)
@@ -50,17 +57,17 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
   }, [])
 
   async function addReminder() {
-    if (newQuantidade < 1) return
     setError("")
+    const isComposite = modeComposite && (newDias > 0 || newHoras > 0 || newMinutos > 0)
+    if (!isComposite && (newQuantidade < 1)) return
     try {
+      const body = isComposite
+        ? { dias: newDias, horas: newHoras, minutos: newMinutos, ativo: true }
+        : { unidade: newUnidade, quantidade: newQuantidade, ativo: true }
       const r = await fetch("/api/reminder-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          unidade: newUnidade,
-          quantidade: newQuantidade,
-          ativo: true,
-        }),
+        body: JSON.stringify(body),
       })
       if (!r.ok) {
         const data = await r.json().catch(() => ({}))
@@ -71,6 +78,9 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
       setAdding(false)
       setNewQuantidade(1)
       setNewUnidade("hour")
+      setNewDias(0)
+      setNewHoras(0)
+      setNewMinutos(15)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao adicionar lembrete")
     }
@@ -144,7 +154,19 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {list.map((item) => (
+            {list.map((item) => {
+              const dias = item.quantidadeDias ?? 0
+              const horas = item.quantidadeHoras ?? 0
+              const mins = item.quantidadeMinutos ?? 0
+              const isComposite = dias > 0 || horas > 0 || mins > 0
+              const label = isComposite
+                ? [
+                    dias ? `${dias} ${dias === 1 ? "dia" : "dias"}` : "",
+                    horas ? `${horas} ${horas === 1 ? "hora" : "horas"}` : "",
+                    mins ? `${mins} ${mins === 1 ? "minuto" : "minutos"}` : "",
+                  ].filter(Boolean).join(", ") + " antes"
+                : `Avisar ${item.quantidade} ${item.quantidade === 1 ? UNIDADE_LABEL[item.unidade].replace(/s$/, "") : UNIDADE_LABEL[item.unidade]} antes`
+              return (
               <div
                 key={item.id}
                 className={`rounded-lg border bg-card px-4 py-3 ${
@@ -154,9 +176,11 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Avisar {item.quantidade} {item.quantidade === 1 ? UNIDADE_LABEL[item.unidade].replace(/s$/, "") : UNIDADE_LABEL[item.unidade]} antes
+                      {label}
                     </p>
-                    <p className="text-[10px] text-muted-foreground capitalize">{item.unidade}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">
+                      {isComposite ? "dias, horas e minutos" : item.unidade}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -179,12 +203,82 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
                   </div>
                 </div>
               </div>
-            ))}
+            )
+            })}
 
             {adding ? (
               <div className="rounded-lg border border-gold/30 bg-card p-4">
                 <p className="mb-3 text-xs font-semibold text-gold">Novo lembrete</p>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="mb-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setModeComposite(false)}
+                    className={`rounded px-3 py-1.5 text-xs font-medium ${!modeComposite ? "bg-gold/20 text-gold border border-gold/50" : "border border-border bg-secondary text-muted-foreground"}`}
+                  >
+                    Um tipo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModeComposite(true)}
+                    className={`rounded px-3 py-1.5 text-xs font-medium ${modeComposite ? "bg-gold/20 text-gold border border-gold/50" : "border border-border bg-secondary text-muted-foreground"}`}
+                  >
+                    Dias, horas e minutos
+                  </button>
+                </div>
+                {modeComposite ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Dias</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newDias}
+                          onChange={(e) => setNewDias(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Horas</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newHoras}
+                          onChange={(e) => setNewHoras(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Minutos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newMinutos}
+                          onChange={(e) => setNewMinutos(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Preencha pelo menos um valor (dias, horas ou minutos).</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={addReminder}
+                        disabled={newDias === 0 && newHoras === 0 && newMinutos === 0}
+                        className="flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-gold disabled:opacity-50"
+                        style={{ border: "1.5px solid #d4a017", background: "rgba(212,160,23,0.1)" }}
+                      >
+                        <Check className="h-3.5 w-3.5" /> Salvar
+                      </button>
+                      <button
+                        onClick={() => { setAdding(false); setError(""); setModeComposite(false); }}
+                        className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="flex-1">
                     <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Tipo</label>
                     <select
@@ -223,6 +317,7 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
             ) : (
               <button
