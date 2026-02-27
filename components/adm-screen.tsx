@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { LogOut, Pencil, Trash2, MessageCircle, Check, X, CalendarDays, AlertCircle, ChevronDown, ChevronUp, Plus, KeyRound, Bell } from "lucide-react"
@@ -38,6 +38,7 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
   const [showCredentials, setShowCredentials] = useState(false)
   const [editingService, setEditingService] = useState<number | null>(null)
   const [serviceEdit, setServiceEdit] = useState<Partial<ServiceItem>>({})
+  const serviceRefs = useRef<(HTMLDivElement | null)[]>([])
 
   function startServiceEdit(i: number) {
     setEditingService(i)
@@ -68,6 +69,15 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
   function removeService(i: number) {
     onUpdateServices(services.filter((_, idx) => idx !== i))
   }
+
+  useEffect(() => {
+    if (editingService !== null) {
+      const el = serviceRefs.current[editingService]
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
+    }
+  }, [editingService])
 
   function startEdit(index: number) {
     setEditingIndex(index)
@@ -183,9 +193,13 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                 <Plus className="h-3 w-3" /> Adicionar
               </button>
             </div>
-            <div className="flex flex-col gap-5 max-h-[60vh] overflow-y-auto pr-1 pb-3">
+            <div className="flex flex-col gap-5 max-h-[65vh] overflow-y-auto pr-1 pb-4">
               {services.map((svc, i) => (
-                <div key={svc.id} className="rounded-lg border border-border bg-card overflow-hidden">
+                <div
+                  key={svc.id}
+                  ref={(el) => { serviceRefs.current[i] = el }}
+                  className="rounded-lg border border-border bg-card overflow-hidden"
+                >
                   {editingService === i ? (
                     <div className="flex flex-col gap-2 p-3">
                       <input
