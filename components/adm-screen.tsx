@@ -72,10 +72,13 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
 
   useEffect(() => {
     if (editingService !== null) {
-      const el = serviceRefs.current[editingService]
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" })
-      }
+      const t = setTimeout(() => {
+        const el = serviceRefs.current[editingService]
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" })
+        }
+      }, 100)
+      return () => clearTimeout(t)
     }
   }, [editingService])
 
@@ -193,58 +196,74 @@ export function AdmScreen({ bookings, services, scheduleBlocks, onUpdateBooking,
                 <Plus className="h-3 w-3" /> Adicionar
               </button>
             </div>
-            <div className="flex flex-col gap-5 max-h-[65vh] overflow-y-auto pr-1 pb-4">
+            <div className="flex flex-col gap-8 max-h-[70vh] overflow-y-auto pr-1 pb-8">
               {services.map((svc, i) => (
                 <div
                   key={svc.id}
                   ref={(el) => { serviceRefs.current[i] = el }}
-                  className="rounded-lg border border-border bg-card overflow-hidden"
+                  className={`rounded-xl border overflow-hidden shadow-lg ${
+                    editingService === i
+                      ? "border-gold/60 bg-card ring-2 ring-gold/30"
+                      : "border-border bg-card"
+                  }`}
                 >
                   {editingService === i ? (
-                    <div className="flex flex-col gap-2 p-3">
-                      <input
-                        value={serviceEdit.name || ""}
-                        onChange={(e) => setServiceEdit({ ...serviceEdit, name: e.target.value })}
-                        placeholder="Nome do serviço"
-                        className="w-full rounded border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
-                      />
-                      <input
-                        value={serviceEdit.desc || ""}
-                        onChange={(e) => setServiceEdit({ ...serviceEdit, desc: e.target.value })}
-                        placeholder="Descrição"
-                        className="w-full rounded border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-4 p-4">
+                      <div>
+                        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Nome</label>
                         <input
-                          value={serviceEdit.price || ""}
-                          onChange={(e) => setServiceEdit({ ...serviceEdit, price: e.target.value })}
-                          placeholder="Preço (ex: R$ 45)"
-                          className="w-full rounded border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
-                        />
-                        <input
-                          value={serviceEdit.duration || ""}
-                          onChange={(e) => setServiceEdit({ ...serviceEdit, duration: e.target.value })}
-                          placeholder="Duração (ex: 40 min)"
-                          className="w-full rounded border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
+                          value={serviceEdit.name || ""}
+                          onChange={(e) => setServiceEdit({ ...serviceEdit, name: e.target.value })}
+                          placeholder="Ex: Corte Clássico"
+                          className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <button onClick={saveServiceEdit} className="flex flex-1 items-center justify-center gap-1 rounded border border-gold/40 bg-gold/15 py-1.5 text-[10px] font-medium text-gold hover:bg-gold/25">
-                          <Check className="h-3 w-3" /> Salvar
+                      <div>
+                        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Descrição</label>
+                        <input
+                          value={serviceEdit.desc || ""}
+                          onChange={(e) => setServiceEdit({ ...serviceEdit, desc: e.target.value })}
+                          placeholder="Ex: Corte masculino com tesoura"
+                          className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Preço</label>
+                          <input
+                            value={serviceEdit.price || ""}
+                            onChange={(e) => setServiceEdit({ ...serviceEdit, price: e.target.value })}
+                            placeholder="R$ 45"
+                            className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Duração</label>
+                          <input
+                            value={serviceEdit.duration || ""}
+                            onChange={(e) => setServiceEdit({ ...serviceEdit, duration: e.target.value })}
+                            placeholder="40 min"
+                            className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-1">
+                        <button onClick={saveServiceEdit} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gold/40 bg-gold/20 py-2.5 text-xs font-medium text-gold hover:bg-gold/30">
+                          <Check className="h-4 w-4" /> Salvar
                         </button>
-                        <button onClick={() => setEditingService(null)} className="flex flex-1 items-center justify-center gap-1 rounded border border-border py-1.5 text-[10px] font-medium text-muted-foreground hover:bg-secondary">
-                          <X className="h-3 w-3" /> Cancelar
+                        <button onClick={() => setEditingService(null)} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border py-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary">
+                          <X className="h-4 w-4" /> Cancelar
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between px-4 py-4 min-h-[80px]">
+                    <div className="flex items-center justify-between gap-4 px-4 py-4 min-h-[88px]">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{svc.name}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{svc.desc} • {svc.duration}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{svc.name}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{svc.desc} • {svc.duration}</p>
                       </div>
-                      <div className="flex items-center gap-3 ml-3">
-                        <span className="text-sm font-bold text-gold">{svc.price}</span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-sm font-bold text-gold whitespace-nowrap">{svc.price}</span>
                         <button
                           onClick={() => startServiceEdit(i)}
                           className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground hover:border-gold/60 hover:text-gold active:scale-95"
