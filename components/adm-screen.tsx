@@ -5,7 +5,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import {
   ArrowLeft, Settings, Pencil, Trash2, MessageCircle, Check, X,
-  CalendarDays, AlertCircle, ChevronRight, Plus, LogOut, KeyRound
+  CalendarDays, AlertCircle, Plus, LogOut, KeyRound
 } from "lucide-react"
 import type { BookingData, ServiceItem } from "./schedule-screen"
 import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
@@ -249,15 +249,6 @@ export function AdmScreen({
               })}
             </div>
           )}
-
-          {/* Botão ver histórico completo */}
-          <button
-            onClick={() => setActiveTab("historico")}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-gold/30 bg-card py-3.5 text-sm font-medium text-gold hover:bg-gold/10"
-          >
-            Ver histórico completo
-            <ChevronRight className="h-4 w-4" />
-          </button>
         </div>
       )}
 
