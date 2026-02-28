@@ -1,10 +1,9 @@
 "use client"
 
-import { Check, CalendarDays } from "lucide-react"
+import { Check } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { BookingData } from "./schedule-screen"
-import { HorseLogo } from "./horse-logo"
 
 interface SuccessScreenProps {
   booking: BookingData
@@ -33,7 +32,26 @@ export function SuccessScreen({ booking, onGoHome, onViewBookings }: SuccessScre
       {/* Booking card */}
       <div className="mb-8 w-full max-w-sm overflow-hidden rounded-lg border border-gold/30 bg-card">
         <div className="flex items-center gap-3 border-b border-border bg-gold/5 px-5 py-4">
-          <HorseLogo size={32} />
+          {/* Emblema do cavalo — mesmo da tela inicial */}
+          <div
+            className="flex-shrink-0 rounded-full p-[3px]"
+            style={{
+              background: "conic-gradient(from 0deg, #f5cc6a 0%, #e8b84b 18%, #c49a2e 35%, #fff3b0 50%, #c49a2e 65%, #e8b84b 82%, #f5cc6a 100%)",
+              boxShadow: "0 0 8px 2px rgba(212,160,23,0.4)",
+            }}
+          >
+            <div className="h-10 w-10 overflow-hidden rounded-full bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/emblem.png"
+                alt="CAVILIA"
+                className="rounded-full object-contain object-center"
+                style={{ width: "138%", height: "138%", marginLeft: "0%", marginTop: "-12%" }}
+                width={56}
+                height={56}
+              />
+            </div>
+          </div>
           <div>
             <p className="font-serif text-sm font-bold text-foreground">CAVILIA</p>
             <p className="text-[10px] tracking-wider text-gold">STUDIO CLUB 1998</p>
