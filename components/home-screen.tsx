@@ -12,10 +12,9 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [clickCount, setClickCount] = useState(0)
 
   function handleCoinClick() {
-    if (flipClass && flipClass !== "showing-back") return // já girando
+    if (flipClass && flipClass !== "showing-back") return
 
     if (side === "cowboy") {
-      // clique no cowboy → gira de volta pro cavalo e reseta
       setFlipClass("flipping-back-to-front")
       setTimeout(() => {
         setSide("horse")
@@ -28,7 +27,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     const newCount = clickCount + 1
 
     if (newCount >= 3) {
-      // 3º clique → gira e FICA no cowboy
       setFlipClass("flipping-to-back")
       setTimeout(() => {
         setSide("cowboy")
@@ -36,7 +34,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         setClickCount(0)
       }, 1400)
     } else {
-      // cliques 1, 2 → gira e volta pro cavalo
       setClickCount(newCount)
       setFlipClass("flipping-to-front")
       setTimeout(() => {
@@ -61,8 +58,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
       </div>
 
       {/* Emblema circular central — clique para girar a moeda */}
-      <div className="coin-scene relative mb-12 flex-shrink-0 flex flex-col items-center gap-2">
-        {/* Pontinhos indicadores de clique */}
+      <div className="coin-scene relative mb-12 flex flex-shrink-0 flex-col items-center gap-2">
         {side === "horse" && !flipClass && (
           <div className="absolute -bottom-6 flex gap-1.5">
             {[0, 1].map((i) => (
@@ -75,40 +71,38 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           </div>
         )}
         <div className="emblem-ring" onClick={handleCoinClick} style={{ cursor: flipClass ? "default" : "pointer" }}>
-        <div className={`coin-card ${flipClass}`}>
-          {/* Frente: Cavalo */}
-          <div className="coin-face bg-black overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/emblem.png"
-              alt="CAVILIA - Cavalo e Ferradura"
-              className="rounded-full object-contain object-center"
-              style={{ width: "138%", height: "138%", marginLeft: "0%", marginTop: "-12%" }}
-              width={192}
-              height={192}
-            />
+          <div className={`coin-card ${flipClass}`}>
+            <div className="coin-face overflow-hidden bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/emblem.png"
+                alt="CAVILIA - Cavalo e Ferradura"
+                className="rounded-full object-contain object-center"
+                style={{ width: "138%", height: "138%", marginLeft: "0%", marginTop: "-12%" }}
+                width={192}
+                height={192}
+              />
+            </div>
+            <div className="coin-face coin-face-back overflow-hidden" style={{ background: "#000" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/cowboy-coin.png"
+                alt="CAVILIA - Cowboy"
+                style={{
+                  position: "absolute",
+                  width: "150%",
+                  height: "150%",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -46%)",
+                  objectFit: "cover",
+                  borderRadius: "9999px",
+                }}
+                width={216}
+                height={216}
+              />
+            </div>
           </div>
-          {/* Verso: Cowboy */}
-          <div className="coin-face coin-face-back overflow-hidden" style={{ background: "#000" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/cowboy-coin.png"
-              alt="CAVILIA - Cowboy"
-              style={{
-                position: "absolute",
-                width: "150%",
-                height: "150%",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -46%)",
-                objectFit: "cover",
-                borderRadius: "9999px",
-              }}
-              width={216}
-              height={216}
-            />
-          </div>
-        </div>
         </div>
       </div>
 
@@ -116,39 +110,43 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
       <div className="flex w-full max-w-xs flex-col gap-4">
         <button
           onClick={() => onNavigate("schedule")}
-          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase transition-all hover:brightness-110"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110"
           style={{
             background: "#2a2420",
             border: "2.5px solid #d4a017",
             boxShadow: "0 0 12px 3px rgba(212,160,23,0.55), 0 0 4px 1px rgba(240,188,42,0.4), inset 0 1px 0 rgba(255,255,255,0.07), 0 3px 12px rgba(0,0,0,0.5)",
           }}
         >
-          <span style={{
-            background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
-          }}>
+          <span
+            style={{
+              background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
+            }}
+          >
             Agendar Horário
           </span>
         </button>
         <button
           onClick={() => onNavigate("profile")}
-          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold tracking-[0.18em] uppercase transition-all hover:brightness-110"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110"
           style={{
             background: "#2a2420",
             border: "2.5px solid #d4a017",
             boxShadow: "0 0 12px 3px rgba(212,160,23,0.55), 0 0 4px 1px rgba(240,188,42,0.4), inset 0 1px 0 rgba(255,255,255,0.07), 0 3px 12px rgba(0,0,0,0.5)",
           }}
         >
-          <span style={{
-            background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
-          }}>
+          <span
+            style={{
+              background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              filter: "drop-shadow(0 0 4px rgba(212,160,23,0.8))",
+            }}
+          >
             Meus Horários
           </span>
         </button>
