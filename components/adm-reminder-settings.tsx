@@ -23,9 +23,10 @@ const UNIDADE_LABEL: Record<ReminderUnit, string> = {
 
 interface AdmReminderSettingsProps {
   onClose: () => void
+  inline?: boolean
 }
 
-export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
+export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProps) {
   const [list, setList] = useState<ReminderSettingItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -123,23 +124,11 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
     boxShadow: "0 0 12px 3px rgba(212,160,23,0.4)",
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-border px-4 py-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-secondary"
-          >
-            <X className="h-4 w-4 text-foreground" />
-          </button>
-          <h1 className="font-serif text-lg font-semibold" style={goldStyle}>
-            Configurações de Lembretes
-          </h1>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+  const inner = (
+    <div className={inline ? "flex flex-col gap-4" : "flex-1 overflow-y-auto px-4 py-6"}>
+      {inline && (
+        <p className="text-xs font-semibold uppercase tracking-wider text-gold">Configurar Lembretes</p>
+      )}
         <p className="mb-4 text-xs text-muted-foreground">
           Defina quando o cliente deve ser avisado antes do atendimento. Os lembretes são usados para notificações push (integração Firebase).
         </p>
@@ -330,6 +319,35 @@ export function AdmReminderSettings({ onClose }: AdmReminderSettingsProps) {
           </div>
         )}
       </div>
+    </div>
+  )
+
+  if (inline) return inner
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      <header className="flex items-center justify-between border-b border-border px-4 py-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-secondary"
+          >
+            <X className="h-4 w-4 text-foreground" />
+          </button>
+          <h1
+            className="font-serif text-lg font-semibold"
+            style={{
+              background: "linear-gradient(180deg, #f5cc50 0%, #d4a017 45%, #f0bc2a 70%, #a87c0e 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Configurações de Lembretes
+          </h1>
+        </div>
+      </header>
+      {inner}
     </div>
   )
 }
