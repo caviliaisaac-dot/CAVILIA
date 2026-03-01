@@ -20,6 +20,7 @@ interface ScheduleScreenProps {
   services?: ServiceItem[]
   scheduleBlocks?: ScheduleBlock
   user?: { name: string; phone: string } | null
+  bookings?: BookingData[]
 }
 
 export interface BookingData {
@@ -52,7 +53,39 @@ const TIME_SLOTS = [
 const CLOSING_HOUR = 22
 const CLOSING_MINUTE = 0
 
-const TAKEN_SLOTS: string[] = []
+function parseDurationMinutes(duration: string): number {
+  const match = duration.match(/(\d+)/)
+  return match ? parseInt(match[1], 10) : 30
+}
+
+function slotToMinutes(slot: string): number {
+  const [h, m] = slot.split(":").map(Number)
+  return h * 60 + m
+}
+
+function getBookedSlots(bookings: BookingData[], dateKey: string, services: ServiceItem[]): Set<string> {
+  const booked = new Set<string>()
+  const dayBookings = bookings.filter((b) => {
+    if (b.status === "cancelled") return false
+    const bDate = format(new Date(b.date), "yyyy-MM-dd")
+    return bDate === dateKey
+  })
+
+  for (const booking of dayBookings) {
+    const startMin = slotToMinutes(booking.time)
+    const svc = services.find((s) => s.name === booking.service)
+    const durationMin = svc ? parseDurationMinutes(svc.duration) : 30
+
+    for (const slot of TIME_SLOTS) {
+      const slotMin = slotToMinutes(slot)
+      if (slotMin >= startMin && slotMin < startMin + durationMin) {
+        booked.add(slot)
+      }
+    }
+  }
+
+  return booked
+}
 
 function isTodayStillOpen(now: Date): boolean {
   const h = now.getHours()
@@ -62,7 +95,7 @@ function isTodayStillOpen(now: Date): boolean {
 
 type Step = 1 | 2 | 3 | 4
 
-export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, scheduleBlocks, user }: ScheduleScreenProps) {
+export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, scheduleBlocks, user, bookings = [] }: ScheduleScreenProps) {
   const SERVICES = servicesProp ?? DEFAULT_SERVICES
   const [step, setStep] = useState<Step>(1)
   const [selectedService, setSelectedService] = useState<string | null>(null)
@@ -309,39 +342,42 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
             Escolha o horario:
           </p>
           <div className="grid grid-cols-3 gap-2">
-            {TIME_SLOTS.map((time) => {
+            {(() => {
               const dateKey = selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""
-              const isBlocked = scheduleBlocks?.timeBlocks.some(
-                (b) => b.time === time && (b.date === "*" || b.date === dateKey)
-              ) ?? false
+              const bookedSlots = getBookedSlots(bookings, dateKey, SERVICES)
               const now = new Date()
-              const isToday = selectedDate && isSameDay(selectedDate, now)
-              const isPastSlot = isToday && (() => {
-                const [h, m] = time.split(":").map(Number)
-                const slotMinutes = h * 60 + m
-                const nowMinutes = now.getHours() * 60 + now.getMinutes()
-                return slotMinutes <= nowMinutes
-              })()
-              const isTaken = TAKEN_SLOTS.includes(time) || isBlocked || isPastSlot
-              const isSelected = selectedTime === time
 
-              return (
-                <button
-                  key={time}
-                  onClick={() => !isTaken && handleTimeSelect(time)}
-                  disabled={isTaken}
-                  className={`rounded-lg border px-3 py-3 text-center transition-all ${
-                    isTaken
-                      ? "cursor-not-allowed border-border/50 bg-secondary/50 text-muted-foreground/30 line-through"
-                      : isSelected
-                        ? "border-gold bg-gold/10 text-gold"
-                        : "border-border bg-card text-foreground hover:border-gold/30"
-                  }`}
-                >
-                  <span className="text-sm font-medium">{time}</span>
-                </button>
-              )
-            })}
+              return TIME_SLOTS.map((time) => {
+                const isBlocked = scheduleBlocks?.timeBlocks.some(
+                  (b) => b.time === time && (b.date === "*" || b.date === dateKey)
+                ) ?? false
+                const isToday = selectedDate && isSameDay(selectedDate, now)
+                const isPastSlot = isToday && (() => {
+                  const [h, m] = time.split(":").map(Number)
+                  return h * 60 + m <= now.getHours() * 60 + now.getMinutes()
+                })()
+                const isBooked = bookedSlots.has(time)
+                const isTaken = isBlocked || isPastSlot || isBooked
+                const isSelected = selectedTime === time
+
+                return (
+                  <button
+                    key={time}
+                    onClick={() => !isTaken && handleTimeSelect(time)}
+                    disabled={isTaken}
+                    className={`rounded-lg border px-3 py-3 text-center transition-all ${
+                      isTaken
+                        ? "cursor-not-allowed border-border/50 bg-secondary/50 text-muted-foreground/30 line-through"
+                        : isSelected
+                          ? "border-gold bg-gold/10 text-gold"
+                          : "border-border bg-card text-foreground hover:border-gold/30"
+                    }`}
+                  >
+                    <span className="text-sm font-medium">{time}</span>
+                  </button>
+                )
+              })
+            })()}
           </div>
           <p className="mt-3 text-center text-[10px] text-muted-foreground/50">
             Horarios riscados ja estao ocupados

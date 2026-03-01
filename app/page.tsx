@@ -196,6 +196,7 @@ export default function CaviliaApp() {
             services={services}
             scheduleBlocks={scheduleBlocks}
             user={currentUser}
+            bookings={bookings}
           />
         )}
         {activeScreen === "profile" && (
