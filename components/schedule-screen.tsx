@@ -63,17 +63,27 @@ function slotToMinutes(slot: string): number {
   return h * 60 + m
 }
 
+function dateToDateKey(d: Date | string): string {
+  if (typeof d === "string") return d.slice(0, 10)
+  const x = new Date(d)
+  const y = x.getFullYear()
+  const m = String(x.getMonth() + 1).padStart(2, "0")
+  const day = String(x.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 function getBookedSlots(bookings: BookingData[], dateKey: string, services: ServiceItem[]): Set<string> {
   const booked = new Set<string>()
   const dayBookings = bookings.filter((b) => {
     if (b.status === "cancelled") return false
-    const bDate = format(new Date(b.date), "yyyy-MM-dd")
-    return bDate === dateKey
+    return dateToDateKey(b.date) === dateKey
   })
 
   for (const booking of dayBookings) {
     const startMin = slotToMinutes(booking.time)
-    const svc = services.find((s) => s.name === booking.service)
+    const svc = services.find(
+      (s) => s.name.trim().toLowerCase() === (booking.service || "").trim().toLowerCase()
+    )
     const durationMin = svc ? parseDurationMinutes(svc.duration) : 30
 
     for (const slot of TIME_SLOTS) {
@@ -343,7 +353,7 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(() => {
-              const dateKey = selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""
+              const dateKey = selectedDate ? dateToDateKey(selectedDate) : ""
               const bookedSlots = getBookedSlots(bookings, dateKey, SERVICES)
               const now = new Date()
 
@@ -365,6 +375,7 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
                     key={time}
                     onClick={() => !isTaken && handleTimeSelect(time)}
                     disabled={isTaken}
+                    title={isTaken ? (isBooked ? "Horário já reservado" : isPastSlot ? "Horário já passou" : "Horário bloqueado") : undefined}
                     className={`rounded-lg border px-3 py-3 text-center transition-all ${
                       isTaken
                         ? "cursor-not-allowed border-border/50 bg-secondary/50 text-muted-foreground/30 line-through"
@@ -380,7 +391,7 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
             })()}
           </div>
           <p className="mt-3 text-center text-[10px] text-muted-foreground/50">
-            Horarios riscados ja estao ocupados
+            Horários riscados = já reservados (respeitando a duração de cada serviço)
           </p>
         </div>
       )}
