@@ -15,9 +15,10 @@ export function PwaInstall() {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Registra o service worker
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {})
+      navigator.serviceWorker
+        .register("/sw.js?v=2", { updateViaCache: "none" })
+        .catch(() => {})
     }
 
     // Verifica se já está instalado

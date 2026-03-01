@@ -1,4 +1,6 @@
-const CACHE_NAME = 'cavilia-v1'
+// Bump este número a cada deploy importante para limpar cache antigo
+const CACHE_NAME = 'cavilia-v2'
+
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -26,10 +28,38 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+// Network first para página e scripts = app atualiza ao abrir, sem precisar reinstalar
+function isNetworkFirstRequest(request) {
+  if (request.mode === 'navigate') return true
+  const dest = request.destination
+  return dest === 'document' || dest === 'script' || dest === 'style'
+}
+
 self.addEventListener('fetch', (event) => {
+  if (!event.request.url.startsWith(self.location.origin)) return
+
+  if (isNetworkFirstRequest(event.request)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          const clone = res.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          return res
+        })
+        .catch(() => caches.match(event.request))
+    )
+    return
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   )
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 self.addEventListener('push', (event) => {
