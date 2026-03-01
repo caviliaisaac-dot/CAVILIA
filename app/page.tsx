@@ -52,6 +52,14 @@ export default function CaviliaApp() {
     })
   }, [])
 
+  function refetchBookings() {
+    apiGet<Array<{ id: string; service: string; price: string; date: string; time: string; clientName: string; phone: string; status: string }>>("/api/bookings")
+      .then((b) => {
+        if (b) setBookings(b.map((x) => ({ id: x.id, service: x.service, price: x.price, date: new Date(x.date), time: x.time, clientName: x.clientName, phone: x.phone, status: x.status as "active" | "cancelled" | "rescheduled" })))
+      })
+      .catch(() => {})
+  }
+
   // Agendamentos só do usuário logado (para o perfil)
   useEffect(() => {
     if (!currentUser?.phone) {
@@ -71,9 +79,9 @@ export default function CaviliaApp() {
     setShowSuccess(false)
     if (screen !== "adm") setAdmLoggedIn(false)
     setActiveScreen(screen)
-    // Ao clicar em Agendar, verifica se tem usuário logado
-    if (screen === "schedule" && !currentUser) {
-      setShowAuth(true)
+    if (screen === "schedule") {
+      refetchBookings()
+      if (!currentUser) setShowAuth(true)
     } else {
       setShowAuth(false)
     }
@@ -197,6 +205,7 @@ export default function CaviliaApp() {
             scheduleBlocks={scheduleBlocks}
             user={currentUser}
             bookings={bookings}
+            onRefetchBookings={refetchBookings}
           />
         )}
         {activeScreen === "profile" && (

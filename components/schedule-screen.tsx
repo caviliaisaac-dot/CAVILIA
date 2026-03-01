@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { ArrowLeft, Check, Scissors, Clock, CalendarDays } from "lucide-react"
 import { format, addDays, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -21,6 +21,7 @@ interface ScheduleScreenProps {
   scheduleBlocks?: ScheduleBlock
   user?: { name: string; phone: string } | null
   bookings?: BookingData[]
+  onRefetchBookings?: () => void
 }
 
 export interface BookingData {
@@ -105,12 +106,16 @@ function isTodayStillOpen(now: Date): boolean {
 
 type Step = 1 | 2 | 3 | 4
 
-export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, scheduleBlocks, user, bookings = [] }: ScheduleScreenProps) {
+export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, scheduleBlocks, user, bookings = [], onRefetchBookings }: ScheduleScreenProps) {
   const SERVICES = servicesProp ?? DEFAULT_SERVICES
   const [step, setStep] = useState<Step>(1)
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (step === 3 && onRefetchBookings) onRefetchBookings()
+  }, [step, onRefetchBookings])
 
   const dates = useMemo(() => {
     const today = new Date()

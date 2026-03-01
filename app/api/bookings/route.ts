@@ -5,6 +5,23 @@ import { createScheduledNotifications } from "@/lib/push-notifications"
 
 export const dynamic = "force-dynamic"
 
+function parseDurationMinutes(duration: string): number {
+  const match = String(duration || "").match(/(\d+)/)
+  return match ? Math.max(1, parseInt(match[1], 10)) : 30
+}
+
+function timeToMinutes(time: string): number {
+  const [h, m] = String(time || "00:00").split(":").map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+function dateToKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -68,6 +85,36 @@ export async function POST(request: Request) {
       })
     }
     if (!service) return NextResponse.json({ error: "Serviço não encontrado" }, { status: 404 })
+
+    const bookingDate = new Date(date)
+    const dateKey = dateToKey(bookingDate)
+    const newStartMin = timeToMinutes(time)
+    const newDurationMin = parseDurationMinutes(service.duration)
+    const newEndMin = newStartMin + newDurationMin
+
+    const sameDayBookings = await prisma.booking.findMany({
+      where: {
+        date: { gte: new Date(dateKey + "T00:00:00"), lt: new Date(dateKey + "T23:59:59.999") },
+        status: { in: ["active", "rescheduled"] },
+      },
+      include: { service: true },
+    })
+
+    for (const existing of sameDayBookings) {
+      const existingStart = timeToMinutes(existing.time)
+      const existingDuration = parseDurationMinutes(existing.service.duration)
+      const existingEnd = existingStart + existingDuration
+      const overlaps = newStartMin < existingEnd && existingStart < newEndMin
+      if (overlaps) {
+        return NextResponse.json(
+          {
+            error: "Este horário já está ocupado",
+            detalhe: `Já existe um agendamento às ${existing.time} (${existing.service.name}). Escolha outro horário.`,
+          },
+          { status: 409 }
+        )
+      }
+    }
 
     let uid: string | null = userId || null
     if (!uid) {
