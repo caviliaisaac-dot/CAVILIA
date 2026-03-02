@@ -77,7 +77,8 @@ function getBookedSlots(bookings: BookingData[], dateKey: string, services: Serv
   const booked = new Set<string>()
   const dayBookings = bookings.filter((b) => {
     if (b.status === "cancelled") return false
-    return dateToDateKey(b.date) === dateKey
+    const bKey = typeof b.date === "string" ? b.date.slice(0, 10) : new Date(b.date).toISOString().slice(0, 10)
+    return bKey === dateKey
   })
 
   for (const booking of dayBookings) {
@@ -358,7 +359,7 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(() => {
-              const dateKey = selectedDate ? dateToDateKey(selectedDate) : ""
+              const dateKey = selectedDate ? selectedDate.toISOString().slice(0, 10) : ""
               const bookedSlots = getBookedSlots(bookings, dateKey, SERVICES)
               const now = new Date()
 
@@ -380,24 +381,30 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
                     key={time}
                     onClick={() => !isTaken && handleTimeSelect(time)}
                     disabled={isTaken}
-                    className={`relative rounded-lg border py-2 px-2 text-center transition-all flex flex-col items-center justify-center gap-0.5 min-h-[60px] ${
+                    className={`relative rounded-lg border py-2.5 px-2 text-center transition-all flex flex-col items-center justify-center gap-1 min-h-[64px] ${
                       isTaken
-                        ? "cursor-not-allowed border-border/40 bg-secondary/30"
+                        ? "cursor-not-allowed border-red-900/50 bg-red-950/20"
                         : isSelected
                           ? "border-gold bg-gold/10 text-gold"
                           : "border-border bg-card text-foreground hover:border-gold/30"
                     }`}
                   >
                     {isTaken && (
-                      <span className="text-[9px] font-semibold uppercase tracking-wider text-red-400/80 leading-none">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-red-400 leading-none">
                         Reservado
                       </span>
                     )}
-                    <span className={`text-sm font-medium leading-none ${isTaken ? "text-muted-foreground/40 line-through decoration-red-400/70 decoration-2" : ""}`}>
+                    <span
+                      className={`text-sm font-medium leading-none ${
+                        isTaken
+                          ? "text-white/30 line-through decoration-2 decoration-red-400"
+                          : ""
+                      }`}
+                    >
                       {time}
                     </span>
                     {isTaken && (
-                      <X className="h-3.5 w-3.5 text-red-400/70" strokeWidth={2.5} aria-hidden />
+                      <X className="h-4 w-4 text-red-400/90 absolute inset-0 m-auto" strokeWidth={2.5} aria-hidden style={{ pointerEvents: "none" }} />
                     )}
                   </button>
                 )
