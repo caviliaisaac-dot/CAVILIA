@@ -86,15 +86,17 @@ export async function POST(request: Request) {
     }
     if (!service) return NextResponse.json({ error: "Serviço não encontrado" }, { status: 404 })
 
-    const bookingDate = new Date(date)
-    const dateKey = dateToKey(bookingDate)
+    const dateStr = typeof date === "string" ? date.trim().slice(0, 10) : ""
+    const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : dateToKey(new Date(date))
     const newStartMin = timeToMinutes(time)
     const newDurationMin = parseDurationMinutes(service.duration)
     const newEndMin = newStartMin + newDurationMin
 
+    const dayStart = new Date(dateKey + "T12:00:00.000Z")
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
     const sameDayBookings = await prisma.booking.findMany({
       where: {
-        date: { gte: new Date(dateKey + "T00:00:00"), lt: new Date(dateKey + "T23:59:59.999") },
+        date: { gte: dayStart, lt: dayEnd },
         status: { in: ["active", "rescheduled"] },
       },
       include: { service: true },
@@ -128,7 +130,7 @@ export async function POST(request: Request) {
         userId: uid,
         clientName,
         phone,
-        date: new Date(date),
+        date: new Date(dateKey + "T12:00:00.000Z"),
         time,
         status: "active",
       },
