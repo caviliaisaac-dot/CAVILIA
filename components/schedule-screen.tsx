@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { ArrowLeft, Check, Scissors, Clock, CalendarDays } from "lucide-react"
+import { ArrowLeft, Check, Scissors, Clock, CalendarDays, X } from "lucide-react"
 import { format, addDays, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { ScheduleBlock } from "./adm-schedule-manager"
@@ -381,23 +381,35 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
                     onClick={() => !isTaken && handleTimeSelect(time)}
                     disabled={isTaken}
                     title={isTaken ? (isBooked ? "Horário já reservado" : isPastSlot ? "Horário já passou" : "Horário bloqueado") : undefined}
-                    className={`rounded-lg border px-3 py-3 text-center transition-all ${
+                    className={`relative rounded-lg border py-3 px-2 text-center transition-all flex flex-col items-center justify-center gap-1 min-h-[64px] ${
                       isTaken
-                        ? "cursor-not-allowed border-border/50 bg-secondary/50 text-muted-foreground/30 line-through"
+                        ? "cursor-not-allowed border-red-500/60 bg-red-950/30"
                         : isSelected
                           ? "border-gold bg-gold/10 text-gold"
                           : "border-border bg-card text-foreground hover:border-gold/30"
                     }`}
                   >
-                    <span className="text-sm font-medium">{time}</span>
+                    <span className={`text-sm font-medium leading-none ${isTaken ? "line-through text-muted-foreground/50" : ""}`}>
+                      {time}
+                    </span>
+                    {isTaken && (
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500" aria-hidden>
+                        <X className="h-4 w-4 text-white" strokeWidth={3} />
+                      </span>
+                    )}
                   </button>
                 )
               })
             })()}
           </div>
-          <p className="mt-3 text-center text-[10px] text-muted-foreground/50">
-            Horários riscados = já reservados (respeitando a duração de cada serviço)
-          </p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
+              <X className="h-3 w-3 text-white" strokeWidth={3} />
+            </span>
+            <p className="text-[10px] text-muted-foreground/60">
+              Horário já reservado — não disponível
+            </p>
+          </div>
         </div>
       )}
 
