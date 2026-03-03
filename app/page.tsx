@@ -79,8 +79,12 @@ export default function CaviliaApp() {
     setShowSuccess(false)
     if (screen !== "adm") setAdmLoggedIn(false)
     setActiveScreen(screen)
-    if (screen === "schedule") {
+
+    if (screen === "schedule" || screen === "adm") {
       refetchBookings()
+    }
+
+    if (screen === "schedule") {
       if (!currentUser) setShowAuth(true)
     } else {
       setShowAuth(false)

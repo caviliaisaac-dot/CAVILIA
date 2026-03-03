@@ -34,6 +34,11 @@ const TIME_SLOTS = [
   "18:30","19:00","19:30",
 ]
 
+function toLocalDate(d: Date | string): Date {
+  const dt = new Date(d)
+  return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(), 12, 0, 0)
+}
+
 export function AdmScreen({
   bookings, services, scheduleBlocks,
   onUpdateBooking, onCancelBooking, onDeleteBooking,
@@ -55,8 +60,9 @@ export function AdmScreen({
 
   const cancelled = bookings.filter((b) => b.status === "cancelled")
   const active = bookings.filter((b) => b.status !== "cancelled")
-  const upcoming = active.filter((b) => new Date(b.date) >= new Date(new Date().setHours(0,0,0,0)))
-  const past = active.filter((b) => new Date(b.date) < new Date(new Date().setHours(0,0,0,0)))
+  const todayStart = new Date(new Date().setHours(0, 0, 0, 0))
+  const upcoming = active.filter((b) => toLocalDate(b.date) >= todayStart)
+  const past = active.filter((b) => toLocalDate(b.date) < todayStart)
 
   function startEdit(index: number) {
     setEditingIndex(index)
@@ -80,7 +86,7 @@ export function AdmScreen({
 
   function openWhatsApp(phone: string, clientName: string, booking: BookingData) {
     const msg = encodeURIComponent(
-      `Olá ${clientName}! Sou da CAVILIA Studio Club. Gostaria de falar sobre seu agendamento de ${booking.service} no dia ${format(new Date(booking.date), "dd/MM", { locale: ptBR })} às ${booking.time}.`
+      `Olá ${clientName}! Sou da CAVILIA Studio Club. Gostaria de falar sobre seu agendamento de ${booking.service} no dia ${format(toLocalDate(booking.date), "dd/MM", { locale: ptBR })} às ${booking.time}.`
     )
     const number = phone.replace(/\D/g, "")
     window.open(`https://wa.me/55${number}?text=${msg}`, "_blank")
@@ -620,7 +626,7 @@ function BookingCard({
             {booking.clientName || "Cliente"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {format(new Date(booking.date), "dd/MM/yyyy", { locale: ptBR })} • {booking.time}
+            {format(toLocalDate(booking.date), "dd/MM/yyyy", { locale: ptBR })} • {booking.time}
           </p>
         </div>
         {!isPast && (
@@ -687,7 +693,7 @@ function BookingCard({
               <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">Data</label>
               <input
                 type="date"
-                value={editData.date ? format(new Date(editData.date), "yyyy-MM-dd") : format(new Date(booking.date), "yyyy-MM-dd")}
+                value={editData.date ? format(toLocalDate(editData.date), "yyyy-MM-dd") : format(toLocalDate(booking.date), "yyyy-MM-dd")}
                 onChange={(e) => onEditDataChange({ ...editData, date: new Date(e.target.value + "T12:00:00") })}
                 className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
               />
