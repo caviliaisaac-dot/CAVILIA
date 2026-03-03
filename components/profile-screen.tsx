@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { CalendarDays, Clock, X, Scissors, ChevronRight, Camera, LogOut, Bell } from "lucide-react"
+import { CalendarDays, Clock, X, Scissors, ChevronRight, ChevronDown, ChevronUp, Camera, LogOut, Bell } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { BookingData } from "./schedule-screen"
@@ -37,6 +37,7 @@ function isSamePhone(a: string, b: string) {
 
 export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, onUpdateUser, onLogout }: ProfileScreenProps) {
   const [showCancelDialog, setShowCancelDialog] = useState<number | null>(null)
+  const [showHistory, setShowHistory] = useState(false)
   const [pushSubscribing, setPushSubscribing] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
@@ -45,8 +46,23 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
   const myBookings = user ? bookings : []
   const fullList = allBookings ?? bookings
 
-  const upcomingBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date >= new Date())
-  const pastBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date < new Date())
+  function getBookingDateTime(b: BookingData) {
+    const dateKey =
+      b.date instanceof Date
+        ? b.date.toISOString().slice(0, 10)
+        : String(b.date).slice(0, 10)
+    const [y, m, d] = dateKey.split("-").map(Number)
+    const [hh, mm] = String(b.time || "00:00").split(":").map(Number)
+    return new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0)
+  }
+
+  const now = new Date()
+  const upcomingBookings = myBookings.filter(
+    (b) => b.status !== "cancelled" && getBookingDateTime(b) >= now
+  )
+  const pastBookings = myBookings.filter(
+    (b) => b.status !== "cancelled" && getBookingDateTime(b) < now
+  )
 
   function handleCancel(index: number) {
     onCancelBooking(index)
@@ -272,36 +288,47 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           )}
         </div>
 
-        {/* Past bookings */}
+        {/* Past bookings — colapsável */}
         {pastBookings.length > 0 && (
           <div>
-            <div className="mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Historico
-              </h2>
-            </div>
-            <div className="flex flex-col gap-2">
-              {pastBookings.map((booking, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/50 p-4 opacity-60"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
-                    <Scissors className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">{booking.service}</p>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="mb-3 flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-secondary/30"
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Historico ({pastBookings.length})
+                </h2>
+              </div>
+              {showHistory
+                ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              }
+            </button>
+            {showHistory && (
+              <div className="flex flex-col gap-2">
+                {pastBookings.map((booking, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/50 p-4 opacity-60"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
+                      <Scissors className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-foreground">{booking.service}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {format(booking.date, "dd/MM/yyyy", { locale: ptBR })} - {booking.time}
+                      </span>
+                    </div>
                     <span className="text-xs text-muted-foreground">
-                      {format(booking.date, "dd/MM/yyyy", { locale: ptBR })} - {booking.time}
+                      {booking.price}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {booking.price}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
