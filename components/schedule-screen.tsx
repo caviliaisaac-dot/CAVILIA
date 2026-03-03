@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { ArrowLeft, Check, Scissors, Clock, CalendarDays, X } from "lucide-react"
+import { ArrowLeft, Check, Scissors, Clock, CalendarDays } from "lucide-react"
 import { format, addDays, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { ScheduleBlock } from "./adm-schedule-manager"
@@ -394,18 +394,9 @@ export function ScheduleScreen({ onBack, onConfirm, services: servicesProp, sche
                         Reservado
                       </span>
                     )}
-                    <span
-                      className={`text-sm font-medium leading-none ${
-                        isTaken
-                          ? "text-white/30 line-through decoration-2 decoration-red-400"
-                          : ""
-                      }`}
-                    >
+                    <span className="text-sm font-medium leading-none">
                       {time}
                     </span>
-                    {isTaken && (
-                      <X className="h-4 w-4 text-red-400/90 absolute inset-0 m-auto" strokeWidth={2.5} aria-hidden style={{ pointerEvents: "none" }} />
-                    )}
                   </button>
                 )
               })
