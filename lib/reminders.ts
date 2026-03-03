@@ -51,14 +51,10 @@ function parseTime(timeStr: string): { hours: number; minutes: number } {
   return { hours: h ?? 0, minutes: m ?? 0 }
 }
 
-/**
- * Calcula a data/hora em que o lembrete deve ser enviado com base no horário do atendimento
- * e na configuração (unidade + quantidade, ou dias + horas + minutos).
- */
 function computeSendAt(appointmentDate: Date, appointmentTime: string, setting: ReminderSettingRow): Date {
   const { hours: appH, minutes: appM } = parseTime(appointmentTime)
-  const base = new Date(appointmentDate)
-  base.setHours(appH, appM, 0, 0)
+  const dt = new Date(appointmentDate)
+  const base = new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(), appH, appM, 0, 0)
 
   const sendAt = new Date(base)
   const dias = setting.quantidadeDias ?? 0

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Plus, Trash2, Check, X } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Bell, BellRing, Clock, CalendarClock, Timer, Plus, Trash2, Check, X, Zap, Info } from "lucide-react"
+import { toast } from "sonner"
 
 export type ReminderUnit = "day" | "hour" | "minute"
 
@@ -15,60 +16,172 @@ export interface ReminderSettingItem {
   quantidadeMinutos?: number
 }
 
-const UNIDADE_LABEL: Record<ReminderUnit, string> = {
-  day: "dias",
-  hour: "horas",
-  minute: "minutos",
-}
-
 interface AdmReminderSettingsProps {
   onClose: () => void
   inline?: boolean
 }
 
+interface Preset {
+  icon: typeof Bell
+  label: string
+  desc: string
+  color: string
+  match: (item: ReminderSettingItem) => boolean
+  create: () => { unidade: ReminderUnit; quantidade: number }
+}
+
+const PRESETS: Preset[] = [
+  {
+    icon: CalendarClock,
+    label: "1 dia antes",
+    desc: "Lembrete na véspera do atendimento",
+    color: "#3b82f6",
+    match: (i) => i.unidade === "day" && i.quantidade === 1 && !(i.quantidadeDias || i.quantidadeHoras || i.quantidadeMinutos),
+    create: () => ({ unidade: "day" as ReminderUnit, quantidade: 1 }),
+  },
+  {
+    icon: Clock,
+    label: "1 hora antes",
+    desc: "Aviso para o cliente se preparar",
+    color: "#f59e0b",
+    match: (i) => i.unidade === "hour" && i.quantidade === 1 && !(i.quantidadeDias || i.quantidadeHoras || i.quantidadeMinutos),
+    create: () => ({ unidade: "hour" as ReminderUnit, quantidade: 1 }),
+  },
+  {
+    icon: Timer,
+    label: "15 minutos antes",
+    desc: "Último aviso — hora de ir!",
+    color: "#ef4444",
+    match: (i) => i.unidade === "minute" && i.quantidade === 15 && !(i.quantidadeDias || i.quantidadeHoras || i.quantidadeMinutos),
+    create: () => ({ unidade: "minute" as ReminderUnit, quantidade: 15 }),
+  },
+]
+
+function buildLabel(item: ReminderSettingItem): string {
+  const dias = item.quantidadeDias ?? 0
+  const horas = item.quantidadeHoras ?? 0
+  const mins = item.quantidadeMinutos ?? 0
+  if (dias > 0 || horas > 0 || mins > 0) {
+    return (
+      [
+        dias ? `${dias} ${dias === 1 ? "dia" : "dias"}` : "",
+        horas ? `${horas} ${horas === 1 ? "hora" : "horas"}` : "",
+        mins ? `${mins} ${mins === 1 ? "min" : "min"}` : "",
+      ]
+        .filter(Boolean)
+        .join(", ") + " antes"
+    )
+  }
+  const q = item.quantidade
+  if (item.unidade === "day") return `${q} ${q === 1 ? "dia" : "dias"} antes`
+  if (item.unidade === "hour") return `${q} ${q === 1 ? "hora" : "horas"} antes`
+  return `${q} ${q === 1 ? "minuto" : "minutos"} antes`
+}
+
+function isPreset(item: ReminderSettingItem): boolean {
+  return PRESETS.some((p) => p.match(item))
+}
+
 export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProps) {
   const [list, setList] = useState<ReminderSettingItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
   const [adding, setAdding] = useState(false)
-  const [modeComposite, setModeComposite] = useState(false)
-  const [newUnidade, setNewUnidade] = useState<ReminderUnit>("hour")
-  const [newQuantidade, setNewQuantidade] = useState(1)
-  const [newDias, setNewDias] = useState(0)
-  const [newHoras, setNewHoras] = useState(0)
-  const [newMinutos, setNewMinutos] = useState(15)
+  const [customUnit, setCustomUnit] = useState<ReminderUnit>("hour")
+  const [customQty, setCustomQty] = useState(2)
+  const [initialSetupDone, setInitialSetupDone] = useState(false)
 
-  async function fetchList() {
+  const fetchList = useCallback(async () => {
     setLoading(true)
-    setError("")
     try {
       const r = await fetch("/api/reminder-settings", { cache: "no-store" })
-      if (!r.ok) throw new Error("Erro ao carregar")
-      const data = await r.json()
+      if (!r.ok) throw new Error()
+      const data: ReminderSettingItem[] = await r.json()
       setList(data)
+      return data
     } catch {
-      setError("Não foi possível carregar as configurações.")
+      toast.error("Erro ao carregar lembretes")
+      return []
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchList()
   }, [])
 
-  async function addReminder() {
-    setError("")
-    const isComposite = modeComposite && (newDias > 0 || newHoras > 0 || newMinutos > 0)
-    if (!isComposite && newQuantidade < 1) return
+  useEffect(() => {
+    fetchList().then(async (data) => {
+      if (data.length === 0 && !initialSetupDone) {
+        setInitialSetupDone(true)
+        await setupDefaults()
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function setupDefaults() {
+    const created: ReminderSettingItem[] = []
+    for (const preset of PRESETS) {
+      try {
+        const { unidade, quantidade } = preset.create()
+        const r = await fetch("/api/reminder-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ unidade, quantidade, ativo: true }),
+        })
+        if (r.ok) {
+          const item = await r.json()
+          created.push(item)
+        }
+      } catch { /* silently skip */ }
+    }
+    if (created.length > 0) {
+      setList(created)
+      toast.success(`${created.length} lembretes padrão configurados!`)
+    }
+  }
+
+  function findPresetItem(preset: Preset): ReminderSettingItem | undefined {
+    return list.find((i) => preset.match(i))
+  }
+
+  async function togglePreset(preset: Preset) {
+    const existing = findPresetItem(preset)
+    if (existing) {
+      try {
+        const r = await fetch(`/api/reminder-settings/${existing.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ativo: !existing.ativo }),
+        })
+        if (!r.ok) throw new Error()
+        const updated = await r.json()
+        setList((prev) => prev.map((x) => (x.id === existing.id ? updated : x)))
+      } catch {
+        toast.error("Erro ao atualizar lembrete")
+      }
+    } else {
+      try {
+        const { unidade, quantidade } = preset.create()
+        const r = await fetch("/api/reminder-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ unidade, quantidade, ativo: true }),
+        })
+        if (!r.ok) throw new Error()
+        const created = await r.json()
+        setList((prev) => [...prev, created])
+        toast.success(`"${preset.label}" ativado!`)
+      } catch {
+        toast.error("Erro ao criar lembrete")
+      }
+    }
+  }
+
+  async function addCustomReminder() {
+    if (customQty < 1) return
     try {
-      const body = isComposite
-        ? { dias: newDias, horas: newHoras, minutos: newMinutos, ativo: true }
-        : { unidade: newUnidade, quantidade: newQuantidade, ativo: true }
       const r = await fetch("/api/reminder-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ unidade: customUnit, quantidade: customQty, ativo: true }),
       })
       if (!r.ok) {
         const data = await r.json().catch(() => ({}))
@@ -77,260 +190,243 @@ export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProp
       const created = await r.json()
       setList((prev) => [...prev, created])
       setAdding(false)
-      setNewQuantidade(1)
-      setNewUnidade("hour")
-      setNewDias(0)
-      setNewHoras(0)
-      setNewMinutos(15)
+      setCustomQty(2)
+      setCustomUnit("hour")
+      toast.success("Lembrete personalizado criado!")
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao adicionar lembrete")
+      toast.error(e instanceof Error ? e.message : "Erro ao adicionar")
     }
   }
 
-  async function toggleAtivo(item: ReminderSettingItem) {
+  async function toggleCustom(item: ReminderSettingItem) {
     try {
       const r = await fetch(`/api/reminder-settings/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ativo: !item.ativo }),
       })
-      if (!r.ok) throw new Error("Erro ao atualizar")
+      if (!r.ok) throw new Error()
       const updated = await r.json()
       setList((prev) => prev.map((x) => (x.id === item.id ? updated : x)))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao ativar/desativar")
+    } catch {
+      toast.error("Erro ao atualizar")
     }
   }
 
-  async function removeItem(id: string) {
+  async function removeCustom(id: string) {
     try {
       const r = await fetch(`/api/reminder-settings/${id}`, { method: "DELETE" })
-      if (!r.ok) throw new Error("Erro ao excluir")
+      if (!r.ok) throw new Error()
       setList((prev) => prev.filter((x) => x.id !== id))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao excluir")
+      toast.success("Lembrete removido")
+    } catch {
+      toast.error("Erro ao excluir")
     }
   }
 
-  function buildLabel(item: ReminderSettingItem): string {
-    const dias = item.quantidadeDias ?? 0
-    const horas = item.quantidadeHoras ?? 0
-    const mins = item.quantidadeMinutos ?? 0
-    const isComposite = dias > 0 || horas > 0 || mins > 0
-    if (isComposite) {
-      return (
-        [
-          dias ? `${dias} ${dias === 1 ? "dia" : "dias"}` : "",
-          horas ? `${horas} ${horas === 1 ? "hora" : "horas"}` : "",
-          mins ? `${mins} ${mins === 1 ? "minuto" : "minutos"}` : "",
-        ]
-          .filter(Boolean)
-          .join(", ") + " antes"
-      )
-    }
-    const unitLabel = item.quantidade === 1
-      ? UNIDADE_LABEL[item.unidade].replace(/s$/, "")
-      : UNIDADE_LABEL[item.unidade]
-    return `Avisar ${item.quantidade} ${unitLabel} antes`
-  }
+  const customItems = list.filter((i) => !isPreset(i))
+  const activeCount = list.filter((i) => i.ativo).length
 
   const body = (
-    <div className={inline ? "flex flex-col gap-4 pb-4" : "flex-1 overflow-y-auto px-4 py-6"}>
-      {inline ? (
-        <p className="text-xs font-semibold uppercase tracking-wider text-gold">Configurar Lembretes</p>
-      ) : null}
-
-      <p className="mb-4 text-xs text-muted-foreground">
-        Defina quando o cliente deve ser avisado antes do atendimento.
-      </p>
-
-      {error ? (
-        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-          {error}
+    <div className={inline ? "flex flex-col gap-5 pb-4" : "flex-1 overflow-y-auto px-4 py-6"}>
+      {/* Header info */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <BellRing className="h-4 w-4 text-gold" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-gold">
+            Lembretes Automáticos
+          </p>
         </div>
-      ) : null}
+        <p className="text-xs text-muted-foreground">
+          Configure quando o cliente recebe um aviso no celular antes do atendimento.
+          O lembrete chega como notificação push com som e vibração.
+        </p>
+      </div>
+
+      {/* Status pill */}
+      <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider ${
+          activeCount > 0
+            ? "border border-green-500/40 bg-green-500/10 text-green-400"
+            : "border border-red-500/40 bg-red-500/10 text-red-400"
+        }`}>
+          <Zap className="h-3 w-3" />
+          {activeCount > 0 ? `${activeCount} lembrete${activeCount > 1 ? "s" : ""} ativo${activeCount > 1 ? "s" : ""}` : "Nenhum lembrete ativo"}
+        </div>
+      </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Carregando...</p>
+        <div className="flex items-center justify-center py-8">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+        </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {list.map((item) => (
-            <div
-              key={item.id}
-              className={`rounded-lg border bg-card px-4 py-3 ${item.ativo ? "border-border" : "border-border/50 opacity-70"}`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{buildLabel(item)}</p>
-                  <p className="text-[10px] text-muted-foreground capitalize">
-                    {(item.quantidadeDias ?? 0) > 0 || (item.quantidadeHoras ?? 0) > 0 || (item.quantidadeMinutos ?? 0) > 0
-                      ? "dias, horas e minutos"
-                      : item.unidade}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
+        <>
+          {/* Smart Presets */}
+          <div>
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Lembretes Recomendados
+            </p>
+            <div className="flex flex-col gap-2.5">
+              {PRESETS.map((preset) => {
+                const existing = findPresetItem(preset)
+                const active = existing?.ativo ?? false
+                const Icon = preset.icon
+                return (
                   <button
-                    onClick={() => toggleAtivo(item)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                      item.ativo
-                        ? "border border-gold/50 bg-gold/10 text-gold"
-                        : "border border-border bg-secondary text-muted-foreground"
+                    key={preset.label}
+                    onClick={() => togglePreset(preset)}
+                    className={`group relative flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
+                      active
+                        ? "border-gold/50 bg-gold/5 shadow-[0_0_12px_rgba(212,160,23,0.1)]"
+                        : "border-border bg-card hover:border-border/80 hover:bg-secondary/30"
                     }`}
                   >
-                    {item.ativo ? "Ativo" : "Inativo"}
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all"
+                      style={{
+                        background: active ? `${preset.color}20` : "rgba(255,255,255,0.05)",
+                        border: `1.5px solid ${active ? preset.color : "rgba(255,255,255,0.1)"}`,
+                      }}
+                    >
+                      <Icon className="h-4.5 w-4.5" style={{ color: active ? preset.color : "rgba(255,255,255,0.3)" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
+                        {preset.label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70">{preset.desc}</p>
+                    </div>
+                    <div
+                      className={`flex h-7 w-12 items-center rounded-full px-0.5 transition-all ${
+                        active ? "bg-gold justify-end" : "bg-secondary justify-start"
+                      }`}
+                    >
+                      <div className={`h-6 w-6 rounded-full shadow-md transition-all ${active ? "bg-black" : "bg-muted-foreground/40"}`} />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Custom reminders */}
+          <div>
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Lembretes Personalizados
+            </p>
+
+            {customItems.length > 0 && (
+              <div className="mb-2.5 flex flex-col gap-2">
+                {customItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
+                      item.ativo ? "border-border bg-card" : "border-border/50 bg-card/50 opacity-60"
+                    }`}
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
+                      <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{buildLabel(item)}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleCustom(item)}
+                        className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                          item.ativo
+                            ? "border border-gold/50 bg-gold/10 text-gold"
+                            : "border border-border bg-secondary text-muted-foreground"
+                        }`}
+                      >
+                        {item.ativo ? "ON" : "OFF"}
+                      </button>
+                      <button
+                        onClick={() => removeCustom(item.id)}
+                        className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {adding ? (
+              <div className="rounded-xl border border-gold/30 bg-card p-4">
+                <p className="mb-3 text-xs font-semibold text-gold">Novo lembrete</p>
+                <div className="flex gap-2 mb-3">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Avisar</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={customQty}
+                      onChange={(e) => setCustomQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Unidade</label>
+                    <select
+                      value={customUnit}
+                      onChange={(e) => setCustomUnit(e.target.value as ReminderUnit)}
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                    >
+                      <option value="minute">minutos antes</option>
+                      <option value="hour">horas antes</option>
+                      <option value="day">dias antes</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={addCustomReminder}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gold/40 bg-gold/20 py-2.5 text-xs font-medium text-gold hover:bg-gold/30"
+                  >
+                    <Check className="h-3.5 w-3.5" /> Salvar
                   </button>
                   <button
-                    onClick={() => removeItem(item.id)}
-                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
-                    title="Excluir"
+                    onClick={() => setAdding(false)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border py-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" /> Cancelar
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              <button
+                onClick={() => setAdding(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3.5 text-xs font-medium text-muted-foreground hover:border-gold/40 hover:text-gold hover:bg-gold/5 transition-all"
+              >
+                <Plus className="h-3.5 w-3.5" /> Adicionar lembrete personalizado
+              </button>
+            )}
+          </div>
 
-          {adding ? (
-            <div className="rounded-lg border border-gold/30 bg-card p-4">
-              <p className="mb-3 text-xs font-semibold text-gold">Novo lembrete</p>
-              <div className="mb-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setModeComposite(false)}
-                  className={`rounded px-3 py-1.5 text-xs font-medium ${
-                    !modeComposite
-                      ? "border border-gold/50 bg-gold/20 text-gold"
-                      : "border border-border bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  Um tipo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModeComposite(true)}
-                  className={`rounded px-3 py-1.5 text-xs font-medium ${
-                    modeComposite
-                      ? "border border-gold/50 bg-gold/20 text-gold"
-                      : "border border-border bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  Dias, horas e minutos
-                </button>
+          {/* Info box */}
+          <div className="rounded-xl border border-border/50 bg-secondary/30 px-4 py-3.5">
+            <div className="flex items-start gap-2.5">
+              <Info className="h-4 w-4 shrink-0 text-muted-foreground/50 mt-0.5" />
+              <div className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                <p className="font-semibold text-muted-foreground/90 mb-1">Como funciona?</p>
+                <p>
+                  Quando um cliente agenda um serviço, os lembretes ativos são programados automaticamente.
+                  O cliente recebe uma notificação push no celular com som e vibração no horário configurado.
+                </p>
+                <p className="mt-1">
+                  Para receber, o cliente precisa ativar as notificações no perfil dele.
+                </p>
               </div>
-
-              {modeComposite ? (
-                <div className="flex flex-col gap-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Dias</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newDias}
-                        onChange={(e) => setNewDias(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Horas</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newHoras}
-                        onChange={(e) => setNewHoras(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Minutos</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newMinutos}
-                        onChange={(e) => setNewMinutos(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className="w-full rounded border border-border bg-secondary px-2 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Preencha pelo menos um valor.</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={addReminder}
-                      disabled={newDias === 0 && newHoras === 0 && newMinutos === 0}
-                      className="flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-gold disabled:opacity-50"
-                      style={{ border: "1.5px solid #d4a017", background: "rgba(212,160,23,0.1)" }}
-                    >
-                      <Check className="h-3.5 w-3.5" /> Salvar
-                    </button>
-                    <button
-                      onClick={() => { setAdding(false); setError(""); setModeComposite(false) }}
-                      className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Tipo</label>
-                      <select
-                        value={newUnidade}
-                        onChange={(e) => setNewUnidade(e.target.value as ReminderUnit)}
-                        className="w-full rounded border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
-                      >
-                        <option value="day">Dias</option>
-                        <option value="hour">Horas</option>
-                        <option value="minute">Minutos</option>
-                      </select>
-                    </div>
-                    <div className="w-24">
-                      <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Qtd</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={newQuantidade}
-                        onChange={(e) => setNewQuantidade(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                        className="w-full rounded border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={addReminder}
-                      className="flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-gold"
-                      style={{ border: "1.5px solid #d4a017", background: "rgba(212,160,23,0.1)" }}
-                    >
-                      <Check className="h-3.5 w-3.5" /> Salvar
-                    </button>
-                    <button
-                      onClick={() => { setAdding(false); setError("") }}
-                      className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
-          ) : (
-            <button
-              onClick={() => setAdding(true)}
-              className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-gold/40 py-4 text-sm font-medium text-gold hover:border-gold hover:bg-gold/5"
-            >
-              <Plus className="h-4 w-4" /> Adicionar lembrete
-            </button>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
 
-  if (inline) {
-    return body
-  }
+  if (inline) return body
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">

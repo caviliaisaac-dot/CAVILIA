@@ -99,11 +99,12 @@ export async function sendPendingPushNotifications(baseUrl: string): Promise<{ s
     }
 
     const payload = JSON.stringify({
-      title: "Lembrete CAVILIA",
+      title: `✂️ Lembrete — ${notif.serviceName}`,
       body: notif.messageText,
       icon: `${baseUrl}/images/app-icon.png`,
       image: `${baseUrl}/images/emblem.png`,
-      tag: `reminder-${notif.bookingId}`,
+      tag: `reminder-${notif.bookingId}-${notif.id}`,
+      url: "/",
     })
 
     try {
@@ -113,7 +114,7 @@ export async function sendPendingPushNotifications(baseUrl: string): Promise<{ s
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
         payload,
-        { TTL: 60 }
+        { TTL: 3600, urgency: "high" }
       )
       await prisma.scheduledNotification.update({
         where: { id: notif.id },

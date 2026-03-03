@@ -1,5 +1,4 @@
-// Bump este número a cada deploy importante para limpar cache antigo
-const CACHE_NAME = 'cavilia-v2'
+const CACHE_NAME = 'cavilia-v3'
 
 const STATIC_ASSETS = [
   '/',
@@ -28,7 +27,6 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// Network first para página e scripts = app atualiza ao abrir, sem precisar reinstalar
 function isNetworkFirstRequest(request) {
   if (request.mode === 'navigate') return true
   const dest = request.destination
@@ -64,44 +62,57 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('push', (event) => {
   if (!event.data) return
-  let data = { title: 'Lembrete CAVILIA', body: '', icon: '/images/app-icon.png', image: '/images/emblem.png', sound: null }
+
+  let data = {
+    title: '✂️ Lembrete CAVILIA',
+    body: '',
+    icon: '/images/app-icon.png',
+    image: '/images/emblem.png',
+  }
+
   try {
     const payload = event.data.json()
     data = { ...data, ...payload }
   } catch (_) {
     data.body = event.data.text()
   }
+
   const opts = {
     body: data.body,
     icon: data.icon,
     image: data.image,
+    badge: '/images/app-icon.png',
     tag: data.tag || 'cavilia-reminder',
-    requireInteraction: false,
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 300],
     silent: false,
-    data: { url: '/', ...data }
+    actions: [
+      { action: 'open', title: 'Ver agendamento' },
+      { action: 'dismiss', title: 'Dispensar' },
+    ],
+    data: { url: '/', ...data },
   }
-  event.waitUntil(
-    self.registration.showNotification(data.title, opts).then(() => {
-      if (data.sound) {
-        try {
-          const audio = new Audio(data.sound)
-          audio.volume = 0.5
-          audio.play().catch(() => {})
-        } catch (_) {}
-      }
-    })
-  )
+
+  event.waitUntil(self.registration.showNotification(data.title, opts))
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
+
+  if (event.action === 'dismiss') return
+
   const url = event.notification.data?.url || '/'
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      if (clientList.length > 0 && clientList[0].url) {
-        clientList[0].focus()
-        clientList[0].navigate(url)
-      } else if (self.clients.openWindow) {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          client.focus()
+          client.navigate(url)
+          return
+        }
+      }
+      if (self.clients.openWindow) {
         self.clients.openWindow(url)
       }
     })
