@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { CalendarDays, Clock, X, Scissors, ChevronRight, ChevronDown, ChevronUp, Camera, LogOut, Bell } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { CalendarDays, Clock, X, Scissors, ChevronRight, ChevronDown, ChevronUp, Camera, LogOut, Bell, User, Lock, Mail, Eye, EyeOff, Info, Check } from "lucide-react"
+import { toast } from "sonner"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { BookingData } from "./schedule-screen"
@@ -40,6 +41,98 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
   const [showHistory, setShowHistory] = useState(false)
   const [pushSubscribing, setPushSubscribing] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
+
+  // Configurações panels
+  type ConfigPanel = null | "dados" | "notificacoes" | "sobre"
+  const [configPanel, setConfigPanel] = useState<ConfigPanel>(null)
+
+  // Dados Pessoais
+  const [editName, setEditName] = useState(user?.name || "")
+  const [editEmail, setEditEmail] = useState(user?.email || "")
+  const [senhaAtual, setSenhaAtual] = useState("")
+  const [novaSenha, setNovaSenha] = useState("")
+  const [confirmNovaSenha, setConfirmNovaSenha] = useState("")
+  const [showSenhaAtual, setShowSenhaAtual] = useState(false)
+  const [showNovaSenha, setShowNovaSenha] = useState(false)
+  const [dadosError, setDadosError] = useState("")
+  const [dadosSuccess, setDadosSuccess] = useState("")
+
+  // Sobre a CAVILIA
+  const [sobreText, setSobreText] = useState("")
+  const [sobreLoading, setSobreLoading] = useState(false)
+
+  useEffect(() => {
+    if (configPanel === "sobre") {
+      setSobreLoading(true)
+      fetch("/api/app-settings?key=sobre")
+        .then((r) => r.json())
+        .then((d) => setSobreText(d.value || ""))
+        .catch(() => setSobreText(""))
+        .finally(() => setSobreLoading(false))
+    }
+    if (configPanel === "dados" && user) {
+      setEditName(user.name || "")
+      setEditEmail(user.email || "")
+      setSenhaAtual("")
+      setNovaSenha("")
+      setConfirmNovaSenha("")
+      setDadosError("")
+      setDadosSuccess("")
+    }
+  }, [configPanel, user])
+
+  async function handleSaveDados() {
+    setDadosError("")
+    setDadosSuccess("")
+    if (!user) return
+    try {
+      const res = await fetch("/api/users/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: user.phone, name: editName.trim(), email: editEmail.trim() }),
+      })
+      if (res.ok) {
+        const updated = { ...user, name: editName.trim(), email: editEmail.trim() }
+        localStorage.setItem("cavilia-current-user", JSON.stringify(updated))
+        onUpdateUser(updated)
+        setDadosSuccess("Dados atualizados!")
+      } else {
+        setDadosError("Erro ao salvar dados")
+      }
+    } catch {
+      setDadosError("Erro de conexão")
+    }
+  }
+
+  async function handleChangePassword() {
+    setDadosError("")
+    setDadosSuccess("")
+    if (!user) return
+    if (!senhaAtual || !novaSenha) return setDadosError("Preencha todos os campos de senha")
+    if (novaSenha.length < 4) return setDadosError("Nova senha deve ter pelo menos 4 caracteres")
+    if (novaSenha !== confirmNovaSenha) return setDadosError("As senhas não conferem")
+    try {
+      const res = await fetch("/api/users/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: user.phone, senhaAtual, novaSenha }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setDadosSuccess("Senha alterada com sucesso!")
+        setSenhaAtual("")
+        setNovaSenha("")
+        setConfirmNovaSenha("")
+        const updated = { ...user, password: novaSenha }
+        localStorage.setItem("cavilia-current-user", JSON.stringify(updated))
+        onUpdateUser(updated)
+      } else {
+        setDadosError(data.error || "Erro ao alterar senha")
+      }
+    } catch {
+      setDadosError("Erro de conexão")
+    }
+  }
   const photoInputRef = useRef<HTMLInputElement>(null)
 
   // Perfil mostra só os agendamentos passados (já filtrados pela API ou pelo parent)
@@ -341,15 +434,150 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          {["Dados Pessoais", "Notificacoes", "Sobre a CAVILIA"].map((item) => (
-            <button
-              key={item}
-              className="flex w-full items-center justify-between border-b border-border/50 px-1 py-3.5 text-left transition-colors hover:bg-secondary/30"
-            >
-              <span className="text-sm text-foreground">{item}</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
-            </button>
-          ))}
+
+          {/* Dados Pessoais */}
+          <button
+            onClick={() => setConfigPanel(configPanel === "dados" ? null : "dados")}
+            className="flex w-full items-center justify-between border-b border-border/50 px-1 py-3.5 text-left transition-colors hover:bg-secondary/30"
+          >
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gold" />
+              <span className="text-sm text-foreground">Dados Pessoais</span>
+            </div>
+            {configPanel === "dados" ? <ChevronUp className="h-4 w-4 text-muted-foreground/40" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/40" />}
+          </button>
+          {configPanel === "dados" && user && (
+            <div className="border-b border-border/50 bg-card/50 px-4 py-4 flex flex-col gap-3">
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Nome</label>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none" />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Telefone</label>
+                <input value={user.phone} disabled
+                  className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2.5 text-sm text-muted-foreground cursor-not-allowed" />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Email</label>
+                <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none" />
+              </div>
+              <button onClick={handleSaveDados} className="flex items-center justify-center gap-2 rounded-lg border border-gold/40 bg-gold/20 py-2.5 text-xs font-medium text-gold hover:bg-gold/30">
+                <Check className="h-3.5 w-3.5" /> Salvar Dados
+              </button>
+
+              <div className="mt-2 border-t border-border/50 pt-3">
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Trocar Senha</p>
+                <div className="flex flex-col gap-2">
+                  <div className="relative">
+                    <input type={showSenhaAtual ? "text" : "password"} value={senhaAtual} onChange={(e) => { setSenhaAtual(e.target.value); setDadosError("") }}
+                      placeholder="Senha atual"
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 pr-10 text-sm text-foreground focus:border-gold focus:outline-none" />
+                    <button onClick={() => setShowSenhaAtual(!showSenhaAtual)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+                      {showSenhaAtual ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input type={showNovaSenha ? "text" : "password"} value={novaSenha} onChange={(e) => { setNovaSenha(e.target.value); setDadosError("") }}
+                      placeholder="Nova senha (min. 4 caracteres)"
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 pr-10 text-sm text-foreground focus:border-gold focus:outline-none" />
+                    <button onClick={() => setShowNovaSenha(!showNovaSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+                      {showNovaSenha ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <input type="password" value={confirmNovaSenha} onChange={(e) => { setConfirmNovaSenha(e.target.value); setDadosError("") }}
+                    placeholder="Confirmar nova senha"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none" />
+                  <button onClick={handleChangePassword} className="flex items-center justify-center gap-2 rounded-lg border border-gold/40 bg-gold/20 py-2.5 text-xs font-medium text-gold hover:bg-gold/30">
+                    <Lock className="h-3.5 w-3.5" /> Alterar Senha
+                  </button>
+                </div>
+              </div>
+
+              {dadosError && <p className="text-center text-xs text-red-400">{dadosError}</p>}
+              {dadosSuccess && <p className="text-center text-xs text-green-400">{dadosSuccess}</p>}
+            </div>
+          )}
+
+          {/* Notificações */}
+          <button
+            onClick={() => setConfigPanel(configPanel === "notificacoes" ? null : "notificacoes")}
+            className="flex w-full items-center justify-between border-b border-border/50 px-1 py-3.5 text-left transition-colors hover:bg-secondary/30"
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-gold" />
+              <span className="text-sm text-foreground">Notificacoes</span>
+            </div>
+            {configPanel === "notificacoes" ? <ChevronUp className="h-4 w-4 text-muted-foreground/40" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/40" />}
+          </button>
+          {configPanel === "notificacoes" && (
+            <div className="border-b border-border/50 bg-card/50 px-4 py-4 flex flex-col gap-3">
+              {upcomingBookings.length > 0 ? (
+                <div className="rounded-lg border border-gold/20 bg-gold/5 px-4 py-3">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Proximo atendimento</p>
+                  <p className="text-sm font-semibold text-foreground">{upcomingBookings[0].service}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(upcomingBookings[0].date), "dd/MM/yyyy", { locale: ptBR })} as {upcomingBookings[0].time}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum agendamento proximo.</p>
+              )}
+              <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3">
+                <div>
+                  <p className="text-sm text-foreground">Notificacoes push</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {typeof Notification !== "undefined" && Notification.permission === "granted"
+                      ? "Ativas — voce recebera lembretes"
+                      : "Desativadas"}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!user) return
+                    setPushSubscribing(true)
+                    const ok = await subscribeToPushNotifications(user.phone)
+                    setPushEnabled(ok)
+                    setPushSubscribing(false)
+                    if (ok) toast.success("Notificacoes ativadas!")
+                    else toast.error("Nao foi possivel ativar")
+                  }}
+                  disabled={pushSubscribing || pushEnabled || (typeof Notification !== "undefined" && Notification.permission === "granted")}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    (typeof Notification !== "undefined" && Notification.permission === "granted") || pushEnabled
+                      ? "border border-green-500/50 bg-green-900/20 text-green-400"
+                      : "border border-gold/40 bg-gold/20 text-gold hover:bg-gold/30"
+                  }`}
+                >
+                  {pushSubscribing ? "Ativando..." : (typeof Notification !== "undefined" && Notification.permission === "granted") || pushEnabled ? "Ativas" : "Ativar"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sobre a CAVILIA */}
+          <button
+            onClick={() => setConfigPanel(configPanel === "sobre" ? null : "sobre")}
+            className="flex w-full items-center justify-between border-b border-border/50 px-1 py-3.5 text-left transition-colors hover:bg-secondary/30"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-gold" />
+              <span className="text-sm text-foreground">Sobre a CAVILIA</span>
+            </div>
+            {configPanel === "sobre" ? <ChevronUp className="h-4 w-4 text-muted-foreground/40" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/40" />}
+          </button>
+          {configPanel === "sobre" && (
+            <div className="border-b border-border/50 bg-card/50 px-4 py-4">
+              {sobreLoading ? (
+                <p className="text-xs text-muted-foreground">Carregando...</p>
+              ) : sobreText ? (
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{sobreText}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhuma informacao cadastrada.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

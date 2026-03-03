@@ -124,3 +124,11 @@ model ReminderMessage {
 
   @@map("reminder_message")
 }
+
+model AppSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @default("")
+
+  @@map("app_settings")
+}

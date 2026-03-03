@@ -5,7 +5,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import {
   ArrowLeft, Settings, Pencil, Trash2, MessageCircle, Check, X,
-  CalendarDays, AlertCircle, Plus, LogOut, KeyRound
+  CalendarDays, AlertCircle, Plus, LogOut, KeyRound, Info
 } from "lucide-react"
 import type { BookingData, ServiceItem } from "./schedule-screen"
 import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
@@ -45,6 +45,9 @@ export function AdmScreen({
   const [showGearMenu, setShowGearMenu] = useState(false)
   const [showCredentials, setShowCredentials] = useState(false)
   const [showScheduleManager, setShowScheduleManager] = useState(false)
+  const [showSobreEditor, setShowSobreEditor] = useState(false)
+  const [sobreText, setSobreText] = useState("")
+  const [sobreSaving, setSobreSaving] = useState(false)
   const [editingService, setEditingService] = useState<number | null>(null)
   const [serviceEdit, setServiceEdit] = useState<Partial<ServiceItem>>({})
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -185,6 +188,18 @@ export function AdmScreen({
                   >
                     <KeyRound className="h-4 w-4 text-gold" />
                     Trocar senha ADM
+                  </button>
+                  <div className="border-t border-border/50" />
+                  <button
+                    onClick={() => {
+                      setShowGearMenu(false)
+                      fetch("/api/app-settings?key=sobre").then(r => r.json()).then(d => setSobreText(d.value || "")).catch(() => {})
+                      setShowSobreEditor(true)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary"
+                  >
+                    <Info className="h-4 w-4 text-gold" />
+                    Sobre a CAVILIA
                   </button>
                   <div className="border-t border-border/50" />
                   <button
@@ -457,6 +472,56 @@ export function AdmScreen({
       {/* Modais */}
       {showCredentials && (
         <AdmCredentials onClose={() => setShowCredentials(false)} />
+      )}
+
+      {/* Modal Sobre a CAVILIA */}
+      {showSobreEditor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="mx-6 w-full max-w-sm rounded-lg border border-border bg-card p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-serif text-lg font-bold text-foreground">Sobre a CAVILIA</h3>
+              <button onClick={() => setShowSobreEditor(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Este texto aparece para os clientes na area "Sobre a CAVILIA" do Perfil.
+            </p>
+            <textarea
+              value={sobreText}
+              onChange={(e) => setSobreText(e.target.value)}
+              rows={6}
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none resize-y"
+              placeholder="Ex: A CAVILIA Studio Club foi fundada em 1998..."
+            />
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => setShowSobreEditor(false)}
+                className="flex-1 rounded-lg border border-border bg-secondary px-4 py-3 text-sm font-medium text-foreground"
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={sobreSaving}
+                onClick={async () => {
+                  setSobreSaving(true)
+                  try {
+                    await fetch("/api/app-settings", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ key: "sobre", value: sobreText }),
+                    })
+                    setShowSobreEditor(false)
+                  } catch {}
+                  setSobreSaving(false)
+                }}
+                className="flex-1 rounded-lg border border-gold/40 bg-gold/20 px-4 py-3 text-sm font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
+              >
+                {sobreSaving ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {showScheduleManager && (
         <AdmScheduleManager
