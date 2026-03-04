@@ -200,7 +200,30 @@ export function AdmScreen({
                   <button
                     onClick={() => {
                       setShowGearMenu(false)
-                      fetch("/api/app-settings?key=sobre", { cache: "no-store" }).then(r => r.json()).then(d => setSobreText(d.value || "")).catch(() => {})
+                      fetch("/api/app-settings?key=sobre", { cache: "no-store" })
+                        .then(r => r.ok ? r.json() : null)
+                        .then(d => {
+                          const fromServer = d?.value ?? ""
+                          if (fromServer) {
+                            setSobreText(fromServer)
+                            return
+                          }
+                          try {
+                            const local = localStorage.getItem("cavilia-sobre-draft")
+                            if (local) setSobreText(local)
+                            else setSobreText("")
+                          } catch {
+                            setSobreText("")
+                          }
+                        })
+                        .catch(() => {
+                          try {
+                            const local = localStorage.getItem("cavilia-sobre-draft")
+                            setSobreText(local ?? "")
+                          } catch {
+                            setSobreText("")
+                          }
+                        })
                       setShowSobreEditor(true)
                     }}
                     className="flex w-full items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary"
@@ -513,6 +536,7 @@ export function AdmScreen({
                 onClick={async () => {
                   setSobreSaving(true)
                   const maxAttempts = 2
+                  let saved = false
                   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
                     try {
                       const controller = new AbortController()
@@ -525,23 +549,35 @@ export function AdmScreen({
                       })
                       clearTimeout(timeout)
                       const data = await res.json().catch(() => ({}))
-                      if (!res.ok) {
-                        toast.error(data?.error || "Erro ao salvar. Tente de novo.")
+                      if (res.ok) {
+                        try { localStorage.removeItem("cavilia-sobre-draft") } catch { /* ignore */ }
+                        toast.success("Sobre a CAVILIA salvo com sucesso.")
+                        setShowSobreEditor(false)
+                        saved = true
                         break
                       }
-                      toast.success("Sobre a CAVILIA salvo com sucesso.")
-                      setShowSobreEditor(false)
+                      if (res.status >= 500) {
+                        try { localStorage.setItem("cavilia-sobre-draft", sobreText) } catch { /* ignore */ }
+                        toast.success("Salvo neste aparelho. Quando a conexão com o servidor funcionar, salve de novo para sincronizar.")
+                        setShowSobreEditor(false)
+                        saved = true
+                        break
+                      }
+                      toast.error(data?.error || "Erro ao salvar. Tente de novo.")
                       break
                     } catch (e) {
                       if (attempt === maxAttempts) {
+                        try { localStorage.setItem("cavilia-sobre-draft", sobreText) } catch { /* ignore */ }
                         const msg = e instanceof DOMException && e.name === "AbortError"
-                          ? "Tempo esgotado. Verifique sua conexão e tente de novo."
-                          : "Erro de conexão. Verifique sua internet e tente de novo."
-                        toast.error(msg)
+                          ? "Tempo esgotado. Seu texto foi salvo neste aparelho; tente sincronizar mais tarde."
+                          : "Sem conexão. Seu texto foi salvo neste aparelho; tente sincronizar mais tarde."
+                        toast.success(msg)
+                        setShowSobreEditor(false)
+                        saved = true
                       }
                     }
                   }
-                  setSobreSaving(false)
+                  if (!saved) setSobreSaving(false)
                 }}
                 className="flex-1 rounded-lg border border-gold/40 bg-gold/20 px-4 py-3 text-sm font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
               >

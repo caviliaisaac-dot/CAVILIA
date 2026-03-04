@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
+export const maxDuration = 15
 
 function isTableMissing(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error ?? "")
@@ -64,13 +65,14 @@ export async function PUT(request: Request) {
   }
 
   const key = body?.key
-  const value = body?.value
-  if (!key || typeof value !== "string") {
+  const rawValue = body?.value
+  if (!key) {
     return NextResponse.json(
       { error: "key e value são obrigatórios" },
       { status: 400 }
     )
   }
+  const value = rawValue != null ? String(rawValue) : ""
 
   const doUpsert = async () => {
     return prisma.appSetting.upsert({
@@ -106,7 +108,7 @@ export async function PUT(request: Request) {
     }
     console.error("[app-settings PUT]", e)
     return NextResponse.json(
-      { error: "Erro ao salvar. Verifique sua conexão e tente de novo." },
+      { error: "Erro ao salvar configuração" },
       { status: 500 }
     )
   }
