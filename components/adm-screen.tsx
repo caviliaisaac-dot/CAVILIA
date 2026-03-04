@@ -24,7 +24,10 @@ interface AdmScreenProps {
   onDeleteBooking: (index: number) => void
   onUpdateServices: (services: ServiceItem[]) => void
   onUpdateScheduleBlocks: (blocks: ScheduleBlock) => void
-  onLogout: () => void
+  // Voltar apenas para fora da área ADM (como a seta para trás)
+  onExitAdm: () => void
+  // Sair do aplicativo: deslogar ADM e cliente, voltar para tela inicial
+  onLogoutApp: () => void
 }
 
 const TIME_SLOTS = [
@@ -42,7 +45,8 @@ function toLocalDate(d: Date | string): Date {
 export function AdmScreen({
   bookings, services, scheduleBlocks,
   onUpdateBooking, onCancelBooking, onDeleteBooking,
-  onUpdateServices, onUpdateScheduleBlocks, onLogout
+  onUpdateServices, onUpdateScheduleBlocks,
+  onExitAdm, onLogoutApp,
 }: AdmScreenProps) {
   const [activeTab, setActiveTab] = useState<TabId>("agenda")
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -144,7 +148,7 @@ export function AdmScreen({
         <div className="relative flex items-center px-4 py-3">
           {/* Seta voltar */}
           <button
-            onClick={onLogout}
+            onClick={onExitAdm}
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -233,7 +237,7 @@ export function AdmScreen({
                   </button>
                   <div className="border-t border-border/50" />
                   <button
-                    onClick={() => { setShowGearMenu(false); onLogout() }}
+                    onClick={() => { setShowGearMenu(false); onLogoutApp() }}
                     className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-950/30"
                   >
                     <LogOut className="h-4 w-4" />

@@ -26,6 +26,8 @@ model User {
   photoUrl     String?  @map("photo_url")
   totalVisitas Int      @default(0) @map("total_visitas")
   dataCadastro String   @map("data_cadastro") // ISO string
+  resetCode    String?  @map("reset_code")
+  resetCodeExp DateTime? @map("reset_code_exp")
   createdAt    DateTime @default(now()) @map("created_at")
 
   bookings Booking[]

@@ -26,7 +26,11 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
   const [showPass, setShowPass] = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
   const [error, setError] = useState("")
-  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotStep, setForgotStep] = useState<"email" | "code" | "done">("email")
+  const [forgotCode, setForgotCode] = useState("")
+  const [newPass, setNewPass] = useState("")
+  const [newPassConfirm, setNewPassConfirm] = useState("")
+  const [forgotLoading, setForgotLoading] = useState(false)
 
   // Login fields
   const [loginPhone, setLoginPhone] = useState("")
@@ -141,14 +145,50 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
     onAuth(newUser)
   }
 
-  function handleForgot() {
+  async function handleForgot() {
     setError("")
     if (!forgotEmail.trim()) return setError("Informe seu e-mail")
-    const raw = localStorage.getItem("cavilia-users")
-    const users: UserData[] = raw ? JSON.parse(raw) : []
-    const found = users.find((u) => u.email?.toLowerCase() === forgotEmail.toLowerCase())
-    if (!found) return setError("E-mail não encontrado")
-    setForgotSent(true)
+    setForgotLoading(true)
+    try {
+      const res = await fetch("/api/users/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return setError(data.error || "Erro ao enviar código")
+      }
+      setForgotStep("code")
+    } catch {
+      setError("Erro de conexão. Tente novamente.")
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  async function handleResetPassword() {
+    setError("")
+    if (!forgotCode.trim()) return setError("Informe o código")
+    if (newPass.length < 4) return setError("Senha deve ter pelo menos 4 caracteres")
+    if (newPass !== newPassConfirm) return setError("Senhas não conferem")
+    setForgotLoading(true)
+    try {
+      const res = await fetch("/api/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim(), code: forgotCode.trim(), newPassword: newPass }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return setError(data.error || "Erro ao redefinir senha")
+      }
+      setForgotStep("done")
+    } catch {
+      setError("Erro de conexão. Tente novamente.")
+    } finally {
+      setForgotLoading(false)
+    }
   }
 
   const goldGradient = {
@@ -169,7 +209,7 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-4 border-b border-border">
         <button
-          onClick={step === "choice" ? onBack : () => { setStep("choice"); setError("") }}
+          onClick={step === "choice" ? onBack : step === "forgot" && forgotStep === "code" ? () => { setForgotStep("email"); setError("") } : () => { setStep("choice"); setError("") }}
           className="flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-secondary"
         >
           <ArrowLeft className="h-4 w-4 text-foreground" />
@@ -234,7 +274,7 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
                   </button>
                 </div>
               </div>
-              <button onClick={() => { setStep("forgot"); setError("") }} className="self-end text-xs text-gold/60 hover:text-gold">
+              <button onClick={() => { setStep("forgot"); setForgotStep("email"); setForgotCode(""); setNewPass(""); setNewPassConfirm(""); setError("") }} className="self-end text-xs text-gold/60 hover:text-gold">
                 Esqueci minha senha
               </button>
               {error && <p className="text-center text-xs text-red-400">{error}</p>}
@@ -330,17 +370,65 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
           {/* FORGOT PASSWORD */}
           {step === "forgot" && (
             <div className="flex flex-col gap-4">
-              {forgotSent ? (
+              {forgotStep === "done" ? (
                 <div className="flex flex-col items-center gap-4 py-6">
                   <CheckCircle className="h-14 w-14 text-gold" />
-                  <h2 className="font-serif text-xl font-bold text-foreground text-center">E-mail enviado!</h2>
+                  <h2 className="font-serif text-xl font-bold text-foreground text-center">Senha redefinida!</h2>
                   <p className="text-sm text-muted-foreground text-center">
-                    Verifique sua caixa de entrada para redefinir sua senha.
+                    Sua senha foi alterada com sucesso. Faça login com a nova senha.
                   </p>
-                  <button onClick={() => { setStep("login"); setForgotSent(false) }} className="w-full rounded-lg py-4 font-serif text-base font-bold mt-2" style={goldButton}>
+                  <button onClick={() => { setStep("login"); setForgotStep("email"); setForgotCode(""); setNewPass(""); setNewPassConfirm(""); setForgotEmail("") }} className="w-full rounded-lg py-4 font-serif text-base font-bold mt-2" style={goldButton}>
                     <span style={goldGradient}>Voltar ao Login</span>
                   </button>
                 </div>
+              ) : forgotStep === "code" ? (
+                <>
+                  <p className="text-sm text-muted-foreground">Digite o código de 6 dígitos enviado para <strong className="text-foreground">{forgotEmail}</strong> e crie sua nova senha.</p>
+                  <p className="text-xs text-muted-foreground/80">Use apenas o código no app. Não clique no link do e-mail (no celular o link pode não abrir).</p>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Código</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                      <input type="text" value={forgotCode} onChange={(e) => { setForgotCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError("") }}
+                        placeholder="000000" maxLength={6}
+                        className="w-full rounded-lg border border-border bg-card pl-9 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-gold focus:outline-none tracking-widest"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Nova Senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                      <input type={showPass ? "text" : "password"} value={newPass} onChange={(e) => { setNewPass(e.target.value); setError("") }}
+                        placeholder="Mínimo 4 caracteres"
+                        className="w-full rounded-lg border border-border bg-card pl-9 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-gold focus:outline-none"
+                      />
+                      <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-gold">
+                        {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Confirmar Nova Senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                      <input type={showConfirmPass ? "text" : "password"} value={newPassConfirm} onChange={(e) => { setNewPassConfirm(e.target.value); setError("") }}
+                        placeholder="Repita a nova senha"
+                        className="w-full rounded-lg border border-border bg-card pl-9 pr-11 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-gold focus:outline-none"
+                      />
+                      <button onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-gold">
+                        {showConfirmPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  {error && <p className="text-center text-xs text-red-400">{error}</p>}
+                  <button onClick={handleResetPassword} disabled={forgotLoading} className="w-full rounded-lg py-4 font-serif text-base font-bold" style={goldButton}>
+                    <span style={goldGradient}>{forgotLoading ? "Redefinindo..." : "Redefinir Senha"}</span>
+                  </button>
+                  <button onClick={() => { setForgotStep("email"); setError("") }} className="text-xs text-gold/60 hover:text-gold text-center">
+                    Reenviar código
+                  </button>
+                </>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground">Informe o e-mail cadastrado para recuperar sua senha.</p>
@@ -356,8 +444,8 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
                     </div>
                   </div>
                   {error && <p className="text-center text-xs text-red-400">{error}</p>}
-                  <button onClick={handleForgot} className="w-full rounded-lg py-4 font-serif text-base font-bold" style={goldButton}>
-                    <span style={goldGradient}>Enviar</span>
+                  <button onClick={handleForgot} disabled={forgotLoading} className="w-full rounded-lg py-4 font-serif text-base font-bold" style={goldButton}>
+                    <span style={goldGradient}>{forgotLoading ? "Enviando..." : "Enviar Código"}</span>
                   </button>
                 </>
               )}

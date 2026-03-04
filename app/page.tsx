@@ -250,7 +250,24 @@ export default function CaviliaApp() {
               if (res) setScheduleBlocks(res)
               else setScheduleBlocks(blocks)
             }}
-            onLogout={() => { setAdmLoggedIn(false); setActiveScreen("home") }}
+            onExitAdm={() => {
+              // Apenas sair do painel ADM e voltar para a Home
+              setAdmLoggedIn(false)
+              setActiveScreen("home")
+            }}
+            onLogoutApp={() => {
+              // Sair do aplicativo: deslogar ADM e também o cliente
+              try {
+                localStorage.removeItem("cavilia-current-user")
+              } catch {
+                // ignore
+              }
+              setAdmLoggedIn(false)
+              setCurrentUser(null)
+              setProfileBookings([])
+              setShowAuth(false)
+              setActiveScreen("home")
+            }}
           />
         )}
         <BottomNav activeScreen={activeScreen} onNavigate={handleNavigate} />
