@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cavilia-v3'
+const CACHE_NAME = 'cavilia-v4'
 
 const STATIC_ASSETS = [
   '/',
@@ -35,6 +35,8 @@ function isNetworkFirstRequest(request) {
 
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith(self.location.origin)) return
+  if (event.request.method !== 'GET') return
+  if (event.request.url.includes('/api/')) return
 
   if (isNetworkFirstRequest(event.request)) {
     event.respondWith(

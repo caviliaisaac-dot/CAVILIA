@@ -512,24 +512,36 @@ export function AdmScreen({
                 disabled={sobreSaving}
                 onClick={async () => {
                   setSobreSaving(true)
-                  try {
-                    const res = await fetch("/api/app-settings", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ key: "sobre", value: sobreText }),
-                    })
-                    const data = await res.json().catch(() => ({}))
-                    if (!res.ok) {
-                      toast.error(data?.error || "Erro ao salvar. Tente de novo.")
-                      return
+                  const maxAttempts = 2
+                  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    try {
+                      const controller = new AbortController()
+                      const timeout = setTimeout(() => controller.abort(), 15000)
+                      const res = await fetch("/api/app-settings", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ key: "sobre", value: sobreText }),
+                        signal: controller.signal,
+                      })
+                      clearTimeout(timeout)
+                      const data = await res.json().catch(() => ({}))
+                      if (!res.ok) {
+                        toast.error(data?.error || "Erro ao salvar. Tente de novo.")
+                        break
+                      }
+                      toast.success("Sobre a CAVILIA salvo com sucesso.")
+                      setShowSobreEditor(false)
+                      break
+                    } catch (e) {
+                      if (attempt === maxAttempts) {
+                        const msg = e instanceof DOMException && e.name === "AbortError"
+                          ? "Tempo esgotado. Verifique sua conexão e tente de novo."
+                          : "Erro de conexão. Verifique sua internet e tente de novo."
+                        toast.error(msg)
+                      }
                     }
-                    toast.success("Sobre a CAVILIA salvo com sucesso.")
-                    setShowSobreEditor(false)
-                  } catch (e) {
-                    toast.error("Erro de conexão. Tente de novo.")
-                  } finally {
-                    setSobreSaving(false)
                   }
+                  setSobreSaving(false)
                 }}
                 className="flex-1 rounded-lg border border-gold/40 bg-gold/20 px-4 py-3 text-sm font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
               >
