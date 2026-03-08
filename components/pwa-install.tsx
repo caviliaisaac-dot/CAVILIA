@@ -17,7 +17,7 @@ export function PwaInstall() {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js?v=2", { updateViaCache: "none" })
+        .register("/sw.js?v=3", { updateViaCache: "none" })
         .catch(() => {})
     }
 

@@ -160,8 +160,13 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
         return setError(data.error || "Erro ao enviar código")
       }
       setForgotStep("code")
-    } catch {
-      setError("Erro de conexão. Tente novamente.")
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(
+        process.env.NODE_ENV === "development"
+          ? `Erro de conexão: ${msg}`
+          : "Erro de conexão. Tente novamente.",
+      )
     } finally {
       setForgotLoading(false)
     }
@@ -184,8 +189,13 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
         return setError(data.error || "Erro ao redefinir senha")
       }
       setForgotStep("done")
-    } catch {
-      setError("Erro de conexão. Tente novamente.")
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(
+        process.env.NODE_ENV === "development"
+          ? `Erro de conexão: ${msg}`
+          : "Erro de conexão. Tente novamente.",
+      )
     } finally {
       setForgotLoading(false)
     }
@@ -383,14 +393,14 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
                 </div>
               ) : forgotStep === "code" ? (
                 <>
-                  <p className="text-sm text-muted-foreground">Digite o código de 6 dígitos enviado para <strong className="text-foreground">{forgotEmail}</strong> e crie sua nova senha.</p>
-                  <p className="text-xs text-muted-foreground/80">Use apenas o código no app. Não clique no link do e-mail (no celular o link pode não abrir).</p>
+                  <p className="text-sm text-muted-foreground">Digite o código de 8 dígitos enviado para <strong className="text-foreground">{forgotEmail}</strong> e crie sua nova senha.</p>
+                  <p className="text-xs text-muted-foreground/80">Use apenas o código aqui. Não clique no link do e-mail — isso pode invalidar o código. Se disser que expirou em segundos, solicite um novo código.</p>
                   <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Código</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-                      <input type="text" value={forgotCode} onChange={(e) => { setForgotCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError("") }}
-                        placeholder="000000" maxLength={6}
+                      <input type="text" value={forgotCode} onChange={(e) => { setForgotCode(e.target.value.replace(/\D/g, "").slice(0, 8)); setError("") }}
+                        placeholder="00000000" maxLength={8}
                         className="w-full rounded-lg border border-border bg-card pl-9 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-gold focus:outline-none tracking-widest"
                       />
                     </div>

@@ -15,7 +15,12 @@ export async function POST(request: Request) {
       where: { email: { equals: email.trim(), mode: "insensitive" } },
     })
     if (!user) {
-      return NextResponse.json({ error: "E-mail não encontrado" }, { status: 404 })
+      return NextResponse.json(
+        {
+          error: "E-mail não encontrado. Se você criou a conta sem informar e-mail (campo opcional), a recuperação por e-mail não está disponível — tente entrar com seu WhatsApp e senha.",
+        },
+        { status: 404 },
+      )
     }
 
     const { error } = await supabase.auth.signInWithOtp({

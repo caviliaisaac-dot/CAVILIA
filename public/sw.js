@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cavilia-v4'
+const CACHE_NAME = 'cavilia-v5'
 
 const STATIC_ASSETS = [
   '/',

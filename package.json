@@ -5,13 +5,17 @@
   "scripts": {
     "dev": "next dev -p 3000 --webpack",
     "dev:webpack": "next dev --webpack",
+    "rush": "lt --port 3000",
+    "dev:rush": "concurrently -n dev,rush -c blue,yellow \"npm run dev\" \"npm run rush\"",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "push:all": "git push origin main && git push cavilia-isaac main",
+    "deploy:check": "node scripts/deploy-check.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -70,6 +74,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
+    "localtunnel": "^2.0.2",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",

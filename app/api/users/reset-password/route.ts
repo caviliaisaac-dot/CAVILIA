@@ -24,9 +24,12 @@ export async function POST(request: Request) {
     if (otpError) {
       console.error("[reset-password] OTP error:", otpError)
       if (otpError.message?.toLowerCase().includes("expired")) {
-        return NextResponse.json({ error: "Código expirado. Solicite um novo." }, { status: 400 })
+        return NextResponse.json(
+          { error: "Código expirado. Solicite um novo código pelo botão 'Enviar Código'." },
+          { status: 400 },
+        )
       }
-      return NextResponse.json({ error: "Código inválido" }, { status: 400 })
+      return NextResponse.json({ error: "Código inválido. Confira o código ou solicite um novo." }, { status: 400 })
     }
 
     const user = await prisma.user.findFirst({
