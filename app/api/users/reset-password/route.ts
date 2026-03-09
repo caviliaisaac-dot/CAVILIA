@@ -15,21 +15,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A senha deve ter pelo menos 4 caracteres" }, { status: 400 })
     }
 
+    const codeTrimmed = String(code).trim().replace(/\D/g, "")
+    if (!codeTrimmed) {
+      return NextResponse.json({ error: "Informe o código recebido por e-mail." }, { status: 400 })
+    }
+
     const { error: otpError } = await supabase.auth.verifyOtp({
       email: email.trim(),
-      token: code.trim(),
+      token: codeTrimmed,
       type: "email",
     })
 
     if (otpError) {
       console.error("[reset-password] OTP error:", otpError)
-      if (otpError.message?.toLowerCase().includes("expired")) {
+      const msg = otpError.message || ""
+      if (msg.toLowerCase().includes("expired")) {
         return NextResponse.json(
           { error: "Código expirado. Solicite um novo código pelo botão 'Enviar Código'." },
           { status: 400 },
         )
       }
-      return NextResponse.json({ error: "Código inválido. Confira o código ou solicite um novo." }, { status: 400 })
+      return NextResponse.json(
+        { error: "Código inválido. " + (msg ? msg : "Confira o código ou solicite um novo.") },
+        { status: 400 },
+      )
     }
 
     const user = await prisma.user.findFirst({
@@ -42,12 +51,16 @@ export async function POST(request: Request) {
     const hash = await bcrypt.hash(newPassword, 10)
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: hash, resetCode: null, resetCodeExp: null },
+      data: { passwordHash: hash },
     })
 
     return NextResponse.json({ ok: true, message: "Senha redefinida com sucesso" })
   } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
     console.error("[reset-password]", e)
-    return NextResponse.json({ error: "Erro ao redefinir senha" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Erro ao redefinir senha. Tente novamente.", detalhe: process.env.NODE_ENV === "development" ? msg : undefined },
+      { status: 500 },
+    )
   }
 }

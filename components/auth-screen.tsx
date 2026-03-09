@@ -186,7 +186,8 @@ export function AuthScreen({ onAuth, onBack }: AuthScreenProps) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        return setError(data.error || "Erro ao redefinir senha")
+        const msg = data.error || "Erro ao redefinir senha"
+        return setError(data.detalhe ? `${msg}: ${data.detalhe}` : msg)
       }
       setForgotStep("done")
     } catch (e) {
