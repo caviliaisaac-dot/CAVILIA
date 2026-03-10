@@ -4,7 +4,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { PwaInstall } from '@/components/pwa-install'
 import { PwaUpdateBanner } from '@/components/pwa-update-banner'
-import { BuildId } from '@/components/build-id'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -55,7 +54,6 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <PwaUpdateBanner />
-        <BuildId />
         {children}
         <Toaster richColors position="top-center" />
         <PwaInstall />
