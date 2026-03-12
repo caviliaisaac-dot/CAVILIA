@@ -71,8 +71,14 @@ export function AdmScreen({
   const cancelled = bookings.filter((b) => b.status === "cancelled")
   const active = bookings.filter((b) => b.status !== "cancelled")
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0))
-  const upcoming = active.filter((b) => toLocalDate(b.date) >= todayStart)
-  const past = active.filter((b) => toLocalDate(b.date) < todayStart)
+  const activeSorted = [...active].sort((a, b) => {
+    const da = toLocalDate(a.date).getTime()
+    const db = toLocalDate(b.date).getTime()
+    if (da !== db) return da - db
+    return a.time.localeCompare(b.time)
+  })
+  const upcoming = activeSorted.filter((b) => toLocalDate(b.date) >= todayStart)
+  const past = activeSorted.filter((b) => toLocalDate(b.date) < todayStart)
 
   function startEdit(index: number) {
     setEditingIndex(index)
@@ -741,17 +747,30 @@ interface BookingCardProps {
   isPast?: boolean
 }
 
-function BookingCard({
-  booking, isEditing, editData, services,
-  onEdit, onSave, onCancelEdit, onDelete, onWhatsApp, onEditDataChange, isPast
-}: BookingCardProps) {
+function BookingCard(props: BookingCardProps) {
+  const {
+    booking,
+    isEditing,
+    editData,
+    services,
+    onEdit,
+    onSave,
+    onCancelEdit,
+    onDelete,
+    onWhatsApp,
+    onEditDataChange,
+    isPast,
+  } = props
+
   const isCancelled = booking.status === "cancelled"
   const isRescheduled = booking.status === "rescheduled"
 
   return (
-    <div className={`rounded-lg border overflow-hidden ${
-      isCancelled ? "border-red-500/50 bg-red-950/30" : "border-border bg-card"
-    }`}>
+    <div
+      className={`rounded-lg border overflow-hidden ${
+        isCancelled ? "border-red-500/50 bg-red-950/30" : "border-border bg-card"
+      }`}
+    >
       {isCancelled && (
         <div className="flex items-center gap-2 bg-red-900/50 px-4 py-2 border-b border-red-500/30">
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
@@ -762,74 +781,104 @@ function BookingCard({
           </span>
         </div>
       )}
+
       {isRescheduled && (
         <div className="flex items-center gap-2 bg-amber-900/40 px-4 py-2 border-b border-amber-500/30">
           <CalendarDays className="h-3.5 w-3.5 text-amber-400" />
-          <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Remarcado</span>
+          <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+            Remarcado
+          </span>
         </div>
       )}
 
       <div className="flex items-center justify-between px-4 py-3">
-        <div>
-          <p className={`font-serif text-sm font-semibold ${isCancelled ? "text-red-300 line-through" : "text-foreground"}`}>
+        <div className="flex flex-col">
+          <p
+            className={`font-serif text-sm font-semibold ${
+              isCancelled ? "text-red-300 line-through" : "text-foreground"
+            }`}
+          >
             {booking.clientName || "Cliente"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {format(toLocalDate(booking.date), "dd/MM/yyyy", { locale: ptBR })} • {booking.time}
+            {format(toLocalDate(booking.date), "dd/MM/yyyy", { locale: ptBR })}
           </p>
         </div>
-        {!isPast && (
-          <div className="flex items-center gap-1">
-            {booking.phone && (
-              <button
-                onClick={onWhatsApp}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-green-800/40 bg-green-900/20 text-green-400 hover:bg-green-900/40"
-                title="WhatsApp"
-              >
-                <MessageCircle className="h-3.5 w-3.5" />
-              </button>
-            )}
-            {!isEditing && (
-              <>
-                <button
-                  onClick={onEdit}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-gold/40 hover:text-gold"
-                  title="Editar / Remarcar"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400"
-                  title="Remover"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </>
-            )}
+
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex min-w-[110px] justify-center rounded-md px-4 py-1.5 text-base font-semibold font-mono ${
+              isCancelled ? "bg-red-900/40 text-red-300" : "bg-black/50 text-gold"
+            }`}
+          >
+            {booking.time}
           </div>
-        )}
+
+          {!isPast && (
+            <div className="flex items-center gap-1">
+              {booking.phone && (
+                <button
+                  onClick={onWhatsApp}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-green-800/40 bg-green-900/20 text-green-400 hover:bg-green-900/40"
+                  title="WhatsApp"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+              {!isEditing && (
+                <>
+                  <button
+                    onClick={onEdit}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-gold/40 hover:text-gold"
+                    title="Editar / Remarcar"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={onDelete}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400"
+                    title="Remover"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {isEditing ? (
         <div className="flex flex-col gap-3 border-t border-border/50 p-4">
           <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">Serviço</label>
+            <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">
+              Serviço
+            </label>
             <select
               value={editData.service || booking.service}
               onChange={(e) => {
-                const svc = services.find(s => s.name === e.target.value)
-                onEditDataChange({ ...editData, service: e.target.value, price: svc?.price || editData.price })
+                const svc = services.find((s) => s.name === e.target.value)
+                onEditDataChange({
+                  ...editData,
+                  service: e.target.value,
+                  price: svc?.price || editData.price,
+                })
               }}
               className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
             >
-              {services.map(s => (
-                <option key={s.id} value={s.name}>{s.name} — {s.price}</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.name}>
+                  {s.name} — {s.price}
+                </option>
               ))}
             </select>
           </div>
+
           <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">Valor</label>
+            <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">
+              Valor
+            </label>
             <input
               type="text"
               value={editData.price || booking.price}
@@ -837,29 +886,47 @@ function BookingCard({
               className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
             />
           </div>
+
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">Data</label>
+              <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                Data
+              </label>
               <input
                 type="date"
-                value={editData.date ? format(toLocalDate(editData.date), "yyyy-MM-dd") : format(toLocalDate(booking.date), "yyyy-MM-dd")}
-                onChange={(e) => onEditDataChange({ ...editData, date: new Date(e.target.value + "T12:00:00") })}
+                value={
+                  editData.date
+                    ? format(toLocalDate(editData.date), "yyyy-MM-dd")
+                    : format(toLocalDate(booking.date), "yyyy-MM-dd")
+                }
+                onChange={(e) =>
+                  onEditDataChange({
+                    ...editData,
+                    date: new Date(e.target.value + "T12:00:00"),
+                  })
+                }
                 className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
               />
             </div>
+
             <div>
-              <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">Horário</label>
+              <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                Horário
+              </label>
               <select
                 value={editData.time || booking.time}
                 onChange={(e) => onEditDataChange({ ...editData, time: e.target.value })}
                 className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
               >
-                {TIME_SLOTS.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                {TIME_SLOTS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
+
           <div className="flex gap-2 pt-1">
             <button
               onClick={onSave}
@@ -877,10 +944,18 @@ function BookingCard({
         </div>
       ) : (
         <div className="flex items-center justify-between border-t border-border/50 px-4 py-3">
-          <span className={`text-sm ${isCancelled ? "text-muted-foreground/50 line-through" : "text-foreground"}`}>
+          <span
+            className={`text-sm ${
+              isCancelled ? "text-muted-foreground/50 line-through" : "text-foreground"
+            }`}
+          >
             {booking.service}
           </span>
-          <span className={`font-serif text-sm font-bold ${isCancelled ? "text-muted-foreground/50" : "text-gold"}`}>
+          <span
+            className={`font-serif text-sm font-bold ${
+              isCancelled ? "text-muted-foreground/50" : "text-gold"
+            }`}
+          >
             {booking.price}
           </span>
         </div>
