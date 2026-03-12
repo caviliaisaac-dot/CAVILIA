@@ -19,6 +19,7 @@ export interface ReminderSettingItem {
 interface AdmReminderSettingsProps {
   onClose: () => void
   inline?: boolean
+  onEditWhatsAppMessage?: () => void
 }
 
 interface Preset {
@@ -82,7 +83,7 @@ function isPreset(item: ReminderSettingItem): boolean {
   return PRESETS.some((p) => p.match(item))
 }
 
-export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProps) {
+export function AdmReminderSettings({ onClose, inline, onEditWhatsAppMessage }: AdmReminderSettingsProps) {
   const [list, setList] = useState<ReminderSettingItem[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
@@ -243,8 +244,8 @@ export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProp
         </p>
       </div>
 
-      {/* Status pill */}
-      <div className="flex items-center gap-2">
+      {/* Status pill + WhatsApp message config */}
+      <div className="flex items-center justify-between gap-2">
         <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider ${
           activeCount > 0
             ? "border border-green-500/40 bg-green-500/10 text-green-400"
@@ -253,6 +254,15 @@ export function AdmReminderSettings({ onClose, inline }: AdmReminderSettingsProp
           <Zap className="h-3 w-3" />
           {activeCount > 0 ? `${activeCount} lembrete${activeCount > 1 ? "s" : ""} ativo${activeCount > 1 ? "s" : ""}` : "Nenhum lembrete ativo"}
         </div>
+        {onEditWhatsAppMessage && (
+          <button
+            type="button"
+            onClick={onEditWhatsAppMessage}
+            className="rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gold hover:bg-gold/20"
+          >
+            Mensagem WhatsApp
+          </button>
+        )}
       </div>
 
       {loading ? (

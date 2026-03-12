@@ -12,6 +12,7 @@ import type { BookingData, ServiceItem } from "./schedule-screen"
 import { AdmScheduleManager, type ScheduleBlock } from "./adm-schedule-manager"
 import { AdmCredentials } from "./adm-credentials"
 import { AdmReminderSettings } from "./adm-reminder-settings"
+import { AdmReminderMessage } from "./adm-reminder-message"
 
 type TabId = "agenda" | "historico" | "servicos" | "lembretes"
 
@@ -64,6 +65,8 @@ export function AdmScreen({
   const [editingService, setEditingService] = useState<number | null>(null)
   const [serviceEdit, setServiceEdit] = useState<Partial<ServiceItem>>({})
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [showReminderMessage, setShowReminderMessage] = useState(false)
+  const [reminderTemplate, setReminderTemplate] = useState<string | null>(null)
 
   const cancelled = bookings.filter((b) => b.status === "cancelled")
   const active = bookings.filter((b) => b.status !== "cancelled")
@@ -91,10 +94,44 @@ export function AdmScreen({
     }
   }
 
-  function openWhatsApp(phone: string, clientName: string, booking: BookingData) {
-    const msg = encodeURIComponent(
-      `Olá ${clientName}! Sou da CAVILIA Studio Club. Gostaria de falar sobre seu agendamento de ${booking.service} no dia ${format(toLocalDate(booking.date), "dd/MM", { locale: ptBR })} às ${booking.time}.`
+  useEffect(() => {
+    let cancelled = false
+    async function loadTemplate() {
+      try {
+        const r = await fetch("/api/reminder-message", { cache: "no-store" })
+        if (!r.ok) return
+        const data = await r.json().catch(() => ({}))
+        if (!cancelled && typeof data.mensagem === "string") {
+          setReminderTemplate(data.mensagem)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadTemplate()
+    return () => { cancelled = true }
+  }, [])
+
+  function buildWhatsAppMessage(clientName: string, booking: BookingData): string {
+    const base =
+      reminderTemplate?.trim() ||
+      "Olá {{nome}}, seu {{servico}} é {{data}} às {{hora}}."
+    const dataStr = format(toLocalDate(booking.date), "dd/MM", { locale: ptBR })
+    const replacements: [RegExp, string][] = [
+      [/{{\s*nome\s*}}|\{\s*nome\s*}/gi, clientName],
+      [/{{\s*servico\s*}}|\{\s*servico\s*}/gi, booking.service],
+      [/{{\s*data\s*}}|\{\s*data\s*}/gi, dataStr],
+      [/{{\s*hora\s*}}|\{\s*hora\s*}/gi, booking.time],
+    ]
+    return replacements.reduce(
+      (txt, [pattern, value]) => txt.replace(pattern, value),
+      base,
     )
+  }
+
+  function openWhatsApp(phone: string, clientName: string, booking: BookingData) {
+    const text = buildWhatsAppMessage(clientName, booking)
+    const msg = encodeURIComponent(text)
     const number = phone.replace(/\D/g, "")
     window.open(`https://wa.me/55${number}?text=${msg}`, "_blank")
   }
@@ -514,7 +551,11 @@ export function AdmScreen({
       {/* ── ABA: LEMBRETES ── */}
       {activeTab === "lembretes" && (
         <div className="flex-1 px-4 pt-4">
-          <AdmReminderSettings onClose={() => {}} inline />
+          <AdmReminderSettings
+            onClose={() => {}}
+            inline
+            onEditWhatsAppMessage={() => setShowReminderMessage(true)}
+          />
         </div>
       )}
 
@@ -639,6 +680,13 @@ export function AdmScreen({
             )}
           </div>
         </div>
+      )}
+
+      {/* Modal Mensagem de Lembrete / WhatsApp */}
+      {showReminderMessage && (
+        <AdmReminderMessage
+          onClose={() => setShowReminderMessage(false)}
+        />
       )}
       {showScheduleManager && (
         <AdmScheduleManager
