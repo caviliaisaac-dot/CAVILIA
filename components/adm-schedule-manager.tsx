@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format, addDays, startOfWeek, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { X, ChevronLeft, ChevronRight, Moon, Clock, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 export interface ScheduleBlock {
   dayoffs: string[]        // YYYY-MM-DD — dias fechados
@@ -32,6 +33,13 @@ const TIME_SLOTS = [
 
 const BLOCK_LABELS = ["Almoço", "Fechado", "Reunião", "Horário reservado", "Saída antecipada"]
 
+const LEAD_OPTIONS = [
+  { value: 0, label: "Sem antecedência mínima" },
+  { value: 30, label: "30 minutos" },
+  { value: 60, label: "1 hora" },
+  { value: 120, label: "2 horas" },
+]
+
 export function AdmScheduleManager({ blocks, onUpdate, onClose }: AdmScheduleManagerProps) {
   const [weekOffset, setWeekOffset] = useState(0)
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
@@ -39,6 +47,8 @@ export function AdmScheduleManager({ blocks, onUpdate, onClose }: AdmScheduleMan
   const [newTimeLabel, setNewTimeLabel] = useState("Almoço")
   const [newTimeSlot, setNewTimeSlot] = useState("12:00")
   const [newTimeDate, setNewTimeDate] = useState<"*" | string>("*")
+  const [leadMinutes, setLeadMinutes] = useState<number | null>(null)
+  const [savingLead, setSavingLead] = useState(false)
 
   // Semana atual baseada no offset
   const weekStart = startOfWeek(addDays(new Date(), weekOffset * 7), { weekStartsOn: 1 })
@@ -90,6 +100,46 @@ export function AdmScheduleManager({ blocks, onUpdate, onClose }: AdmScheduleMan
   const recurringBlocks = blocks.timeBlocks.filter((b) => b.date === "*")
   const specificBlocks = blocks.timeBlocks.filter((b) => b.date !== "*")
 
+  useEffect(() => {
+    let cancelled = false
+    async function loadLead() {
+      try {
+        const r = await fetch("/api/app-settings?key=min_lead_minutes", { cache: "no-store" })
+        if (!r.ok) throw new Error()
+        const data = await r.json().catch(() => ({}))
+        const n = data && typeof data.value === "string" ? parseInt(data.value, 10) : Number(data.value)
+        if (!cancelled) {
+          setLeadMinutes(Number.isFinite(n) && n >= 0 ? n : 0)
+        }
+      } catch {
+        if (!cancelled) setLeadMinutes(0)
+      }
+    }
+    loadLead()
+    return () => { cancelled = true }
+  }, [])
+
+  async function handleLeadChange(next: number) {
+    setLeadMinutes(next)
+    setSavingLead(true)
+    try {
+      const r = await fetch("/api/app-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "min_lead_minutes", value: String(next) }),
+      })
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        throw new Error(data.error || "Erro ao salvar configuração")
+      }
+      toast.success("Antecedência mínima atualizada!")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar antecedência")
+    } finally {
+      setSavingLead(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-[#110e0b] max-h-[85vh] overflow-y-auto shadow-2xl">
@@ -101,6 +151,30 @@ export function AdmScheduleManager({ blocks, onUpdate, onClose }: AdmScheduleMan
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        {/* Configuração de antecedência mínima */}
+        <div className="px-4 pt-3">
+          <div className="mb-3 rounded-lg border border-border bg-card px-3 py-3">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Antecedência mínima para agendar
+            </p>
+            <p className="mb-2 text-[11px] text-muted-foreground">
+              Define quanto tempo antes do horário o cliente pode marcar (ex: não permitir agendar para daqui a 5 minutos).
+            </p>
+            <select
+              value={leadMinutes ?? 0}
+              onChange={(e) => handleLeadChange(parseInt(e.target.value, 10))}
+              disabled={leadMinutes === null || savingLead}
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-60"
+            >
+              {LEAD_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Tabs */}

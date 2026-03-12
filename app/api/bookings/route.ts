@@ -107,6 +107,27 @@ export async function POST(request: Request) {
       include: { service: true },
     })
 
+    // Regra 2: antecedência mínima para agendar (min_lead_minutes em app_settings)
+    try {
+      const setting = await prisma.appSetting.findUnique({ where: { key: "min_lead_minutes" } })
+      const minLead = setting ? Math.max(0, parseInt(setting.value, 10) || 0) : 0
+      if (minLead > 0) {
+        const bookingDateTime = new Date(`${dateKey}T${time}:00`)
+        const diffMinutes = (bookingDateTime.getTime() - Date.now()) / 60000
+        if (diffMinutes < minLead) {
+          return NextResponse.json(
+            {
+              error: "Horário muito próximo.",
+              detalhe: `A antecedência mínima para agendar é de ${minLead} minutos. Escolha um horário mais à frente.`,
+            },
+            { status: 400 },
+          )
+        }
+      }
+    } catch (e) {
+      console.error("[bookings] Falha ao ler min_lead_minutes:", e)
+    }
+
     // Regra: o cliente só pode ter um agendamento por dia
     if (phoneKey) {
       const alreadyForClient = sameDayBookings.find(
