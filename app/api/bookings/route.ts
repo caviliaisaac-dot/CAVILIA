@@ -22,6 +22,16 @@ function dateToKey(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
+/** Horário (ms) em que o agendamento considera "vencido" (fim do horário + 2h). Usa data em UTC e time como hora local do dia (depende de TZ do servidor; ideal TZ=America/Sao_Paulo). */
+function getAppointmentCutoffMs(date: Date, time: string): number {
+  const y = date.getUTCFullYear()
+  const m = date.getUTCMonth()
+  const d = date.getUTCDate()
+  const [h, min] = String(time || "00:00").split(":").map(Number)
+  const endOfAppointment = new Date(y, m, d, h ?? 0, min ?? 0, 0, 0)
+  return endOfAppointment.getTime() + 2 * 60 * 60 * 1000
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -32,6 +42,19 @@ export async function GET(request: Request) {
       include: { service: true, user: true },
     })
 
+    const now = Date.now()
+    const idsToAutoCancel: string[] = []
+    for (const b of list) {
+      if (b.status !== "active" && b.status !== "rescheduled") continue
+      if (now > getAppointmentCutoffMs(b.date, b.time)) idsToAutoCancel.push(b.id)
+    }
+    if (idsToAutoCancel.length > 0) {
+      await prisma.booking.updateMany({
+        where: { id: { in: idsToAutoCancel } },
+        data: { status: "cancelled" },
+      })
+    }
+
     let data = list.map((b) => ({
       id: b.id,
       service: b.service.name,
@@ -40,7 +63,7 @@ export async function GET(request: Request) {
       time: b.time,
       clientName: b.clientName,
       phone: b.phone,
-      status: b.status as "active" | "cancelled" | "rescheduled",
+      status: (idsToAutoCancel.includes(b.id) ? "cancelled" : b.status) as "active" | "cancelled" | "rescheduled",
     }))
 
     // Filtro por telefone: só agendamentos do cliente (perfil)
