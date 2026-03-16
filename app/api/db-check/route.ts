@@ -28,6 +28,31 @@ export async function GET() {
     const servicesCount = await prisma.service.count()
     const bookingsCount = await prisma.booking.count()
 
+    // Diagnóstico de app_settings (antecedência mínima etc.) — ajuda a descobrir se produção e localhost usam o mesmo banco
+    let appSettingsInfo: { min_lead_minutes: string; total_keys: number } = { min_lead_minutes: "—", total_keys: 0 }
+    try {
+      const settings = await prisma.appSetting.findMany({ select: { key: true, value: true } })
+      const minLead = settings.find((s) => s.key === "min_lead_minutes")
+      appSettingsInfo = {
+        min_lead_minutes: minLead ? minLead.value : "(não configurado)",
+        total_keys: settings.length,
+      }
+    } catch {
+      appSettingsInfo = { min_lead_minutes: "(tabela app_settings ausente ou erro)", total_keys: 0 }
+    }
+
+    // Indício de qual banco está sendo usado (só o host, sem senha) para comparar localhost vs Vercel
+    let dbHost = "(não mostrado)"
+    try {
+      const u = process.env.DATABASE_URL
+      if (u && typeof u === "string") {
+        const parsed = new URL(u.replace(/^postgresql:\/\//, "https://"))
+        dbHost = parsed.hostname ?? "(inválido)"
+      }
+    } catch {
+      // ignora
+    }
+
     return NextResponse.json({
       ok: true,
       message: "Supabase conectado com sucesso!",
@@ -35,7 +60,11 @@ export async function GET() {
         services: servicesCount,
         bookings: bookingsCount,
       },
+      app_settings: appSettingsInfo,
+      database_host: dbHost,
       dica: servicesCount === 0 ? "Rode: npm run db:seed" : undefined,
+      como_descobrir_erro:
+        "Compare esta página com a mesma URL no outro ambiente (localhost vs Vercel). Se app_settings ou database_host forem diferentes, cada ambiente está usando um banco diferente — a antecedência que você salvou no ADM foi só no banco deste ambiente.",
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

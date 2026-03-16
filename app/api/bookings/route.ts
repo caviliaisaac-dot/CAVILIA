@@ -131,11 +131,13 @@ export async function POST(request: Request) {
     })
 
     // Regra 2: antecedência mínima para agendar (min_lead_minutes em app_settings)
+    // Horário de Brasília (UTC-3): interpretar data/hora no fuso do usuário para não rejeitar por causa do servidor em UTC
+    const APP_TIMEZONE_OFFSET = "-03:00" // Horário de Brasília (BRT)
     try {
       const setting = await prisma.appSetting.findUnique({ where: { key: "min_lead_minutes" } })
       const minLead = setting ? Math.max(0, parseInt(setting.value, 10) || 0) : 0
       if (minLead > 0) {
-        const bookingDateTime = new Date(`${dateKey}T${time}:00`)
+        const bookingDateTime = new Date(`${dateKey}T${time}:00${APP_TIMEZONE_OFFSET}`)
         const diffMinutes = (bookingDateTime.getTime() - Date.now()) / 60000
         if (diffMinutes < minLead) {
           return NextResponse.json(
