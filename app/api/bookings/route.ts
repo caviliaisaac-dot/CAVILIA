@@ -42,19 +42,8 @@ export async function GET(request: Request) {
       include: { service: true, user: true },
     })
 
-    const now = Date.now()
-    const idsToAutoCancel: string[] = []
-    for (const b of list) {
-      if (b.status !== "active" && b.status !== "rescheduled") continue
-      if (now > getAppointmentCutoffMs(b.date, b.time)) idsToAutoCancel.push(b.id)
-    }
-    if (idsToAutoCancel.length > 0) {
-      await prisma.booking.updateMany({
-        where: { id: { in: idsToAutoCancel } },
-        data: { status: "cancelled" },
-      })
-    }
-
+    // Importante: não cancelar automaticamente no GET para evitar que agendamentos "sumam" logo após criar.
+    // A tela deve apenas refletir o status atual salvo no banco.
     let data = list.map((b) => ({
       id: b.id,
       service: b.service.name,
@@ -63,7 +52,7 @@ export async function GET(request: Request) {
       time: b.time,
       clientName: b.clientName,
       phone: b.phone,
-      status: (idsToAutoCancel.includes(b.id) ? "cancelled" : b.status) as "active" | "cancelled" | "rescheduled",
+      status: b.status as "active" | "cancelled" | "rescheduled",
     }))
 
     // Filtro por telefone: só agendamentos do cliente (perfil)
