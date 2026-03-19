@@ -115,7 +115,7 @@ export default function CaviliaApp() {
     if (activeScreen !== "adm" || !admLoggedIn) return
 
     const refreshNow = () => refetchBookings()
-    const intervalId = window.setInterval(refreshNow, 15000)
+    const intervalId = window.setInterval(refreshNow, 5000)
 
     const onFocus = () => refreshNow()
     const onVisibilityChange = () => {
