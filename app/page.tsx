@@ -253,7 +253,7 @@ export default function CaviliaApp() {
   }
 
   return (
-    <main className="relative mx-auto min-h-screen max-w-md">
+    <main className="relative mx-auto min-h-screen w-full max-w-md lg:max-w-[1400px]">
       {/* Fundo couro real */}
       <div
         className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"

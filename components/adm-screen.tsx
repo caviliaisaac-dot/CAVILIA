@@ -421,14 +421,14 @@ export function AdmScreen({
 
       {/* ── ABA: AGENDA ── */}
       {activeTab === "agenda" && (
-        <div className="flex-1 px-4 pt-4">
+        <div className="flex-1 px-4 pt-4 lg:px-6">
           {upcoming.length === 0 ? (
             <div className="mt-10 rounded-lg border border-dashed border-border bg-card px-6 py-10 text-center">
               <CalendarDays className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">Nenhum agendamento próximo</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
               {upcoming.map((b) => {
                 const gi = bookings.indexOf(b)
                 return (
@@ -920,7 +920,7 @@ function BookingCard(props: BookingCardProps) {
 
   return (
     <div
-      className={`rounded-lg border overflow-hidden ${
+      className={`rounded-lg border overflow-hidden lg:min-h-[210px] ${
         isCancelled ? "border-red-500/50 bg-red-950/30" : "border-border bg-card"
       }`}
     >
