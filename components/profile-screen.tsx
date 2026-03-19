@@ -225,9 +225,9 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           {user ? user.name : "Meu Perfil"}
         </h1>
         {user?.phone && (
-          <p className="mt-0.5 text-xs text-muted-foreground lg:text-sm lg:text-zinc-200">{user.phone}</p>
+          <p className="mt-0.5 text-xs text-zinc-100 lg:text-sm lg:text-zinc-200">{user.phone}</p>
         )}
-        <p className="mt-0.5 text-xs text-muted-foreground lg:text-sm lg:text-zinc-200">
+        <p className="mt-0.5 text-xs text-zinc-100 lg:text-sm lg:text-zinc-200">
           Cliente desde {joinYear}
         </p>
 
@@ -247,7 +247,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           >
             {levelCfg.label}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[10px] text-zinc-100 lg:text-muted-foreground">
             • {totalVisitas} {totalVisitas === 1 ? "visita" : "visitas"}
           </span>
         </div>
@@ -261,7 +261,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
                 style={{ width: `${progresso}%`, background: levelCfg.color }}
               />
             </div>
-            <p className="mt-1 text-center text-[10px] text-muted-foreground/60">
+            <p className="mt-1 text-center text-[10px] text-zinc-200 lg:text-muted-foreground/60">
               Faltam {faltam} visita{faltam !== 1 ? "s" : ""} para {
                 totalVisitas < 5 ? "Prata ⚪" :
                 totalVisitas < 10 ? "Ouro 🟡" : "VIP 💎"
@@ -276,7 +276,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
         {user && (
           <button
             onClick={onLogout}
-            className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-red-400 transition-colors"
+            className="mt-3 flex items-center gap-1.5 text-xs text-zinc-100 hover:text-red-400 transition-colors lg:text-muted-foreground/60"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sair da conta
@@ -291,7 +291,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
               setPushSubscribing(false)
             }}
             disabled={pushSubscribing || pushEnabled || (typeof Notification !== "undefined" && Notification.permission === "granted")}
-            className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-gold transition-colors disabled:opacity-50"
+            className="mt-2 flex items-center gap-1.5 text-xs text-zinc-100 hover:text-gold transition-colors disabled:opacity-50 lg:text-muted-foreground/60"
           >
             <Bell className="h-3.5 w-3.5" />
             {pushSubscribing ? "Ativando…" : pushEnabled || (typeof Notification !== "undefined" && Notification.permission === "granted") ? "Notificações ativas" : "Receber lembretes no celular"}
@@ -305,19 +305,19 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           <span className="font-serif text-2xl font-bold text-gold">
             {myBookings.length}
           </span>
-          <span className="text-[10px] text-muted-foreground">Total</span>
+          <span className="text-[10px] text-zinc-100 lg:text-muted-foreground">Total</span>
         </div>
         <div className="flex flex-col items-center border-r border-border py-4">
           <span className="font-serif text-2xl font-bold text-gold">
             {upcomingBookings.length}
           </span>
-          <span className="text-[10px] text-muted-foreground">Proximos</span>
+          <span className="text-[10px] text-zinc-100 lg:text-muted-foreground">Proximos</span>
         </div>
         <div className="flex flex-col items-center py-4">
           <span className="font-serif text-2xl font-bold text-gold">
             {pastBookings.length}
           </span>
-          <span className="text-[10px] text-muted-foreground">Realizados</span>
+          <span className="text-[10px] text-zinc-100 lg:text-muted-foreground">Realizados</span>
         </div>
       </div>
 
@@ -336,11 +336,11 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
 
           {upcomingBookings.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border bg-card px-6 py-8 text-center">
-              <Scissors className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">
+              <Scissors className="mx-auto mb-2 h-6 w-6 text-zinc-300/70 lg:text-muted-foreground/30" />
+              <p className="text-sm text-zinc-100 lg:text-muted-foreground">
                 {user ? "Nenhum agendamento futuro" : "Faça login para ver seus agendamentos"}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground/60">
+              <p className="mt-1 text-xs text-zinc-200 lg:text-muted-foreground/60">
                 {user ? "Agende pelo menu Agendar" : "Use o menu Agendar para entrar na sua conta"}
               </p>
             </div>
@@ -359,11 +359,11 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
                       {booking.service}
                     </p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-zinc-100 lg:text-muted-foreground">
                         {format(booking.date, "dd/MM", { locale: ptBR })}
                       </span>
-                      <span className="text-muted-foreground/30">|</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-zinc-300/60 lg:text-muted-foreground/30">|</span>
+                      <span className="text-xs text-zinc-100 lg:text-muted-foreground">
                         {booking.time}
                       </span>
                     </div>
@@ -380,7 +380,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
                       className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors hover:border-destructive-foreground/30 hover:bg-destructive/20"
                       aria-label="Cancelar agendamento"
                     >
-                      <X className="h-3 w-3 text-muted-foreground" />
+                      <X className="h-3 w-3 text-zinc-100 lg:text-muted-foreground" />
                     </button>
                   </div>
                 </div>
@@ -397,14 +397,14 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
               className="mb-3 flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-secondary/30"
             >
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                <Clock className="h-4 w-4 text-zinc-100 lg:text-muted-foreground" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-100 lg:text-muted-foreground">
                   Historico ({pastBookings.length})
                 </h2>
               </div>
               {showHistory
-                ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ? <ChevronUp className="h-4 w-4 text-zinc-100 lg:text-muted-foreground" />
+                : <ChevronDown className="h-4 w-4 text-zinc-100 lg:text-muted-foreground" />
               }
             </button>
             {showHistory && (
@@ -412,18 +412,18 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
                 {pastBookings.map((booking, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/50 p-4 opacity-60"
+                    className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/50 p-4 opacity-90 lg:opacity-60"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
-                      <Scissors className="h-4 w-4 text-muted-foreground" />
+                      <Scissors className="h-4 w-4 text-zinc-100 lg:text-muted-foreground" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-foreground">{booking.service}</p>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-zinc-100 lg:text-muted-foreground">
                         {format(booking.date, "dd/MM/yyyy", { locale: ptBR })} - {booking.time}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-zinc-100 lg:text-muted-foreground">
                       {booking.price}
                     </span>
                   </div>
