@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { HomeScreen } from "@/components/home-screen"
 import { ScheduleScreen, type BookingData, type ServiceItem, DEFAULT_SERVICES } from "@/components/schedule-screen"
@@ -101,13 +101,37 @@ export default function CaviliaApp() {
     register()
   }, [currentUser?.phone, publicVapidKey])
 
-  function refetchBookings() {
+  const refetchBookings = useCallback(() => {
     apiGet<Array<{ id: string; service: string; price: string; date: string; time: string; clientName: string; phone: string; status: string }>>("/api/bookings")
       .then((b) => {
         if (b) setBookings(b.map((x) => ({ id: x.id, service: x.service, price: x.price, date: new Date(x.date), time: x.time, clientName: x.clientName, phone: x.phone, status: x.status as "active" | "cancelled" | "rescheduled" })))
       })
       .catch(() => {})
-  }
+  }, [])
+
+  // Atualização automática no ADM para o barbeiro acompanhar novos agendamentos
+  // sem precisar recarregar manualmente a página.
+  useEffect(() => {
+    if (activeScreen !== "adm" || !admLoggedIn) return
+
+    const refreshNow = () => refetchBookings()
+    const intervalId = window.setInterval(refreshNow, 15000)
+
+    const onFocus = () => refreshNow()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshNow()
+    }
+
+    window.addEventListener("focus", onFocus)
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    refreshNow()
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("focus", onFocus)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+    }
+  }, [activeScreen, admLoggedIn, refetchBookings])
 
   // Agendamentos só do usuário logado (para o perfil)
   useEffect(() => {

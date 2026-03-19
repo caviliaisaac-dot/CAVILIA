@@ -43,22 +43,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pb-24">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pb-24 lg:pb-32">
       {/* CAVILIA: grande, dourado, brilho metálico */}
-      <h1 className="cavilia-title mb-0 font-serif text-6xl font-bold tracking-[0.14em]">
+      <h1 className="cavilia-title mb-0 font-serif text-6xl font-bold tracking-[0.14em] lg:text-8xl">
         CAVILIA
       </h1>
       {/* — STUDIO CLUB 1998 — com linhas douradas */}
-      <div className="mt-2 mb-8 flex items-center gap-2">
+      <div className="mt-2 mb-8 flex items-center gap-2 lg:mb-10">
         <span className="text-gold/80">—</span>
-        <span className="studio-subtitle font-sans text-[13px] font-medium tracking-[0.28em] uppercase">
+        <span className="studio-subtitle font-sans text-[13px] font-medium tracking-[0.28em] uppercase lg:text-[15px]">
           Studio Club 1998
         </span>
         <span className="text-gold/80">—</span>
       </div>
 
       {/* Emblema circular central — clique para girar a moeda */}
-      <div className="coin-scene relative mb-12 flex flex-shrink-0 flex-col items-center gap-2">
+      <div className="coin-scene relative mb-12 flex flex-shrink-0 flex-col items-center gap-2 lg:mb-14 lg:scale-125">
         {side === "horse" && !flipClass && (
           <div className="absolute -bottom-6 flex gap-1.5">
             {[0, 1].map((i) => (
@@ -107,10 +107,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
       </div>
 
       {/* Botões com borda dourada grossa e vibrante */}
-      <div className="flex w-full max-w-xs flex-col gap-4">
+      <div className="flex w-full max-w-xs flex-col gap-4 lg:max-w-md lg:gap-5">
         <button
           onClick={() => onNavigate("schedule")}
-          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110 lg:py-4 lg:text-base"
           style={{
             background: "#2a2420",
             border: "2.5px solid #d4a017",
@@ -131,7 +131,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         </button>
         <button
           onClick={() => onNavigate("profile")}
-          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110"
+          className="rounded-lg px-6 py-3.5 font-sans text-sm font-semibold uppercase tracking-[0.18em] transition-all hover:brightness-110 lg:py-4 lg:text-base"
           style={{
             background: "#2a2420",
             border: "2.5px solid #d4a017",
