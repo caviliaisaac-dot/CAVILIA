@@ -150,11 +150,17 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
   }
 
   const now = new Date()
+  const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+
+  function getBookingEndTime(b: BookingData): Date {
+    return new Date(getBookingDateTime(b).getTime() + TWO_HOURS_MS)
+  }
+
   const upcomingBookings = myBookings.filter(
-    (b) => b.status !== "cancelled" && getBookingDateTime(b) >= now
+    (b) => b.status !== "cancelled" && getBookingEndTime(b) >= now
   )
   const pastBookings = myBookings.filter(
-    (b) => b.status !== "cancelled" && getBookingDateTime(b) < now
+    (b) => b.status !== "cancelled" && getBookingEndTime(b) < now
   )
 
   function handleCancel(index: number) {

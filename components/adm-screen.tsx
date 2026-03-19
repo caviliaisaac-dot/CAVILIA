@@ -70,15 +70,30 @@ export function AdmScreen({
 
   const cancelled = bookings.filter((b) => b.status === "cancelled")
   const active = bookings.filter((b) => b.status !== "cancelled")
-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0))
+  // Regra de UI: um agendamento entra em "Histórico" após 2 horas do horário marcado.
+  // Isso não altera o que está salvo no banco, apenas muda em qual lista o ADM exibe.
+  const now = new Date()
+  const TWO_HOURS_MS = 2 * 60 * 60 * 1000
   const activeSorted = [...active].sort((a, b) => {
     const da = toLocalDate(a.date).getTime()
     const db = toLocalDate(b.date).getTime()
     if (da !== db) return da - db
     return a.time.localeCompare(b.time)
   })
-  const upcoming = activeSorted.filter((b) => toLocalDate(b.date) >= todayStart)
-  const past = activeSorted.filter((b) => toLocalDate(b.date) < todayStart)
+
+  function getBookingDateTime(b: BookingData): Date {
+    const base = toLocalDate(b.date)
+    const [hh, mm] = String(b.time || "00:00").split(":").map(Number)
+    base.setHours(hh || 0, mm || 0, 0, 0)
+    return base
+  }
+
+  function getBookingEndTime(b: BookingData): Date {
+    return new Date(getBookingDateTime(b).getTime() + TWO_HOURS_MS)
+  }
+
+  const upcoming = activeSorted.filter((b) => getBookingEndTime(b).getTime() >= now.getTime())
+  const past = activeSorted.filter((b) => getBookingEndTime(b).getTime() < now.getTime())
 
   function startEdit(index: number) {
     setEditingIndex(index)
