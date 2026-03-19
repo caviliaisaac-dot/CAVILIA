@@ -195,9 +195,9 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
     : new Date().getFullYear()
 
   return (
-    <div className="flex min-h-screen flex-col pb-24">
+    <div className="flex min-h-screen flex-col pb-24 lg:mx-auto lg:w-full lg:max-w-6xl lg:px-6">
       {/* Header */}
-      <header className="border-b border-border px-4 pb-6 pt-10 flex flex-col items-center text-center">
+      <header className="border-b border-border px-4 pb-6 pt-10 flex flex-col items-center text-center lg:mt-4 lg:rounded-2xl lg:border lg:bg-card/70 lg:px-8 lg:pt-8">
         {/* Foto de perfil com botão de trocar */}
         <div className="relative mb-3">
           <div className="flex-shrink-0" style={{ width: 86, height: 86, padding: 3, borderRadius: '9999px', background: 'conic-gradient(from 0deg, #f5cc6a 0%, #e8b84b 18%, #c49a2e 35%, #fff3b0 50%, #c49a2e 65%, #e8b84b 82%, #f5cc6a 100%)', boxShadow: '0 0 18px 4px rgba(232,184,75,0.45)' }}>
@@ -221,13 +221,13 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
           <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
         </div>
 
-        <h1 className="font-serif text-xl font-bold text-foreground">
+        <h1 className="font-serif text-xl font-bold text-foreground lg:text-3xl">
           {user ? user.name : "Meu Perfil"}
         </h1>
         {user?.phone && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{user.phone}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground lg:text-sm lg:text-zinc-200">{user.phone}</p>
         )}
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-muted-foreground lg:text-sm lg:text-zinc-200">
           Cliente desde {joinYear}
         </p>
 
@@ -300,7 +300,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
       </header>
 
       {/* Stats — só do cliente logado */}
-      <div className="grid grid-cols-3 border-b border-border">
+      <div className="grid grid-cols-3 border-b border-border lg:mt-4 lg:rounded-2xl lg:border lg:bg-card/60">
         <div className="flex flex-col items-center border-r border-border py-4">
           <span className="font-serif text-2xl font-bold text-gold">
             {myBookings.length}
@@ -322,7 +322,9 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pt-6">
+      <div className="flex-1 px-4 pt-6 lg:px-0">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-6">
+        <div className="lg:col-span-7">
         {/* Upcoming */}
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-2">
@@ -430,9 +432,10 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
             )}
           </div>
         )}
+        </div>
 
         {/* Menu options */}
-        <div className="mt-8 mb-4">
+        <div className="mt-8 mb-4 lg:col-span-5 lg:mt-0 lg:rounded-2xl lg:border lg:border-border lg:bg-card/60 lg:p-4">
           <div className="mb-3 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground/50">
@@ -521,19 +524,19 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
             <div className="border-b border-border/50 bg-card/50 px-4 py-4 flex flex-col gap-3">
               {upcomingBookings.length > 0 ? (
                 <div className="rounded-lg border border-gold/20 bg-gold/5 px-4 py-3">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Proximo atendimento</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 lg:text-zinc-200">Proximo atendimento</p>
                   <p className="text-sm font-semibold text-foreground">{upcomingBookings[0].service}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground lg:text-zinc-200">
                     {format(new Date(upcomingBookings[0].date), "dd/MM/yyyy", { locale: ptBR })} as {upcomingBookings[0].time}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">Nenhum agendamento proximo.</p>
+                <p className="text-xs text-muted-foreground lg:text-zinc-200">Nenhum agendamento proximo.</p>
               )}
               <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3">
                 <div>
                   <p className="text-sm text-foreground">Notificacoes push</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground lg:text-zinc-200">
                     {typeof Notification !== "undefined" && Notification.permission === "granted"
                       ? "Ativas — voce recebera lembretes"
                       : "Desativadas"}
@@ -584,6 +587,7 @@ export function ProfileScreen({ bookings, allBookings, user, onCancelBooking, on
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
 
